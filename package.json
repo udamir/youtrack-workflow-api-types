@@ -1,0 +1,34 @@
+{
+  "name": "@types/jetbrains__youtrack-scripting-api",
+  "version": "0.0.1",
+  "description": "TypeScript definitions for @jetbrains/youtrack-scripting-api",
+  "main": "src/index.d.ts",
+  "types": "src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "entities": ["src/entities.d.ts"],
+      "workflow": ["src/workflow.d.ts"],
+      "http": ["src/http.d.ts"],
+      "search": ["src/search.d.ts"],
+      "date-time": ["src/date-time.d.ts"],
+      "notifications": ["src/notifications.d.ts"],
+      "strings": ["src/strings.d.ts"]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/udamir/youtrack-scripting-api-types.git"
+  },
+  "keywords": [
+    "youtrack",
+    "workflow",
+    "types",
+    "api"
+  ],
+  "author": "Damir Yusipov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/udamir/youtrack-scripting-api-types/issues"
+  },
+  "homepage": "https://github.com/udamir/youtrack-scripting-api-types#readme"
+}
