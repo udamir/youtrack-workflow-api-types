@@ -289,13 +289,15 @@ export interface Requirement {
 	 */
 	type:
 		| string
-		| User
-		| UserGroup
-		| Project
-		| Issue
-		| Tag
-		| SavedQuery
-		| IssueLinkPrototype;
+		| typeof User
+		| typeof UserGroup
+		| typeof Project
+		| typeof Issue
+		| typeof Tag
+		| typeof SavedQuery
+		| typeof IssueLinkPrototype;
+
+	[key: string]: string | boolean | object | undefined;
 }
 
 /**
