@@ -2,7 +2,7 @@
  * Type definitions for @jetbrains/youtrack-scripting-api/notifications
  * Based on documentation: https://www.jetbrains.com/help/youtrack/devportal/YouTrack-Api-Documentation.html
  */
-import type { Issue } from './entities/issue';
+import type { Issue } from './entities';
 
 /**
  * This module contains functionality for sending email messages.

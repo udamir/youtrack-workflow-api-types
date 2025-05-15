@@ -4,7 +4,7 @@
  */
 
 import type { BaseEntity, YTSet, PersistentFile, Requirements } from './core';
-import type { InputStream } from '../util';
+import type { InputStream, ActionUserInputType, FieldFromRequirement } from '../utils';
 import type { Project } from './project';
 import type { User } from './user';
 import type { Tag } from './tag';
@@ -168,15 +168,16 @@ export class ArticleAttachment extends BaseArticleAttachment {
    * });
    * ```
    */
-  static action(ruleProperties: {
+  static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
     title: string;
+    command: string;
     userInput?: {
-      type: string | Record<string, unknown>;
-      description: string;
-    };
-    guard(ctx: { articleAttachment: ArticleAttachment }): boolean;
-    action(ctx: { articleAttachment: ArticleAttachment }): void;
-    requirements?: Record<string, unknown>;
+      type: T;
+      description?: string;
+    } | null;
+    guard(ctx: { articleAttachment: ArticleAttachment, userInput?: FieldFromRequirement<T> }): boolean;
+    action(ctx: { articleAttachment: ArticleAttachment, userInput?: FieldFromRequirement<T> }): void;
+    requirements?: R;
   }): object;
   
   /**
@@ -382,15 +383,16 @@ export class Article extends BaseArticle {
    * @param ruleProperties A JSON object that defines the properties for the rule.
    * @returns The object representation of the rule.
    */
-  static action(ruleProperties: {
+  static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
     title: string;
+    command: string;
     userInput?: {
-      type: string | object;
-      description: string;
-    };
-    guard: (ctx: ArticleContext) => boolean;
-    action: (ctx: ArticleContext) => void;
-    requirements?: Requirements;
+      type: T;
+      description?: string;
+    } | null;
+    guard: (ctx: ArticleContext & { userInput?: FieldFromRequirement<T> }) => boolean;
+    action: (ctx: ArticleContext & { userInput?: FieldFromRequirement<T> }) => void;
+    requirements?: R;
   }): object;
   
   /**

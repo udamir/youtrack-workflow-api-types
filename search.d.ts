@@ -3,11 +3,8 @@
  * Based on documentation: https://www.jetbrains.com/help/youtrack/devportal/YouTrack-Api-Documentation.html
  */
 
+import type { Issue, YTSet, User } from './entities';
 import type { WatchFolder } from './entities/search';
-import type { Issue } from './entities/issue';
-import type { YTSet } from './entities/core';
-import type { User } from './entities/user';
-
 
 /**
  * Returns issues that match a search query.

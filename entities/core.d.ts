@@ -1,5 +1,6 @@
 import type { User, UserGroup } from "./user";
 import type { SavedQuery } from "./search";
+import type { FieldType } from "../utils";
 import type { Project } from "./project";
 import type { Issue } from "./issue";
 import type { Tag } from "./tag";
@@ -248,6 +249,52 @@ export class YTSet<T> {
 	toArray(): T[];
 }
 
+interface BaseRequirement<T> {
+	type: T;
+	/**
+	 * The optional name of the field or entity. If not provided, the key (alias) for this requirement in the Requirements object is used.
+	 */
+	name?: string;
+}
+
+interface IssueLinkPrototypeRequirement
+	extends BaseRequirement<typeof IssueLinkPrototype> {
+	/**
+	 * The inward name of the issue link type (equals outward name if not set).
+	 */
+	inward?: string;
+
+	/**
+	 * The outward name of the issue link type (required for IssueLinkPrototype requirements).
+	 */
+	outward: string;
+}
+
+interface IssueRequirement extends BaseRequirement<typeof Issue> {
+	/**
+	 * An optional issue ID, used instead of name for Issue requirements.
+	 */
+	id?: string;
+}
+
+interface TagRequirement extends BaseRequirement<typeof Tag> {}
+
+interface SavedQueryRequirement extends BaseRequirement<typeof SavedQuery> {}
+
+interface UserRequirement extends BaseRequirement<typeof User> {
+	/**
+	 * An optional login, used instead of name for User requirements.
+	 */
+	login?: string;
+}
+
+interface UserGroupRequirement extends BaseRequirement<typeof UserGroup> {
+	/**
+	 * An optional login, used instead of name for UserGroup requirements.
+	 */
+	login?: string;
+}
+
 /**
  * A single element in a set of Requirements.
  * @since 2025.3.21
@@ -288,14 +335,26 @@ export interface Requirement {
 	 * Can be one of the custom field types or system-wide entities.
 	 */
 	type:
-		| string
 		| typeof User
 		| typeof UserGroup
 		| typeof Project
 		| typeof Issue
 		| typeof Tag
 		| typeof SavedQuery
-		| typeof IssueLinkPrototype;
+		| typeof IssueLinkPrototype
+		| FieldType.userFieldType
+		| FieldType.enumFieldType
+		| FieldType.dateType
+		| FieldType.dateTimeType
+		| FieldType.integerType
+		| FieldType.floatType
+		| FieldType.stringType
+		| FieldType.textType
+		| FieldType.periodType
+		| FieldType.versionFieldType
+		| FieldType.stateFieldType
+		| FieldType.buildFieldType
+		| FieldType.ownedFieldType
 
 	[key: string]: string | boolean | object | undefined;
 }

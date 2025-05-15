@@ -5,6 +5,7 @@
 
 import type { BaseEntity, YTSet } from './core';
 import type { BaseArticle } from './articles';
+import type { FieldType } from '../utils';
 import type { Project } from './project';
 import type { Issue } from './issue';
 import type { Tag } from './tag';
@@ -28,7 +29,7 @@ export class User extends BaseEntity {
   /**
    * Field type. Used when defining rule requirements.
    */
-  static readonly fieldType: string;
+  static readonly fieldType = FieldType.userFieldType;
 
   /**
    * Custom user attributes.
@@ -283,11 +284,6 @@ export class UserGroup extends BaseEntity {
    * The All Users group.
    */
   static readonly allUsersGroup: UserGroup;
-
-  /**
-   * Field type. Used when defining rule requirements.
-   */
-  static readonly fieldType: string;
 
   /**
    * The description of the group.

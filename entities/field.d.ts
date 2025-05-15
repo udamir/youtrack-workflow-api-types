@@ -5,8 +5,231 @@
 
 import type { BaseEntity, YTSet } from "./core";
 import type { User, UserGroup } from "./user";
-import type { Project } from "./project";
+import type { FieldType } from "../utils";
 import type { Issue } from "./issue";
+
+/**
+ * Class representing operations on custom fields used in issues.
+ * The actual set of custom fields that are used for each issue is configured on a per-project basis.
+ * @since 2018.1
+ */
+
+export type Fields<F> = {
+	/**
+	 * Checks whether the value for a custom field is set to an expected value in the current transaction.
+	 * @param field The field to check
+	 * @param expected The expected value
+	 * @returns If the field is set to the expected value, returns true
+	 */
+	becomes<K extends keyof F>(field: K, expected: F[K]): boolean;
+
+	/**
+	 * Checks whether a user has permission to read the custom field.
+	 * @param field The custom field to check for read access
+	 * @param user The user for whom the permission to read the custom field is checked
+	 * @returns If the user can read the field, returns true
+	 */
+	canBeReadBy<K extends keyof F>(field: K, user: User): boolean;
+
+	/**
+	 * Checks whether a user has permission to update the custom field.
+	 * @param field The custom field to check for update access
+	 * @param user The user for whom the permission to update the custom field is checked
+	 * @returns If the user can update the field, returns true
+	 */
+	canBeWrittenBy<K extends keyof F>(field: K, user: User): boolean;
+
+	/**
+	 * Checks whether the custom field is changed in the current transaction.
+	 * @param field The name of the custom field (for example, 'State') or a reference to the field that is checked
+	 * @returns If the value of the field is changed in the current transaction, returns true
+	 */
+	isChanged<K extends keyof F>(field: K): boolean;
+
+	/**
+	 * Returns the previous value of a single-valued custom field before an update was applied.
+	 * If the field is not changed in the transaction, returns null.
+	 * @param field The name of the custom field (for example, 'State') or a reference to the field for which the previous value is returned
+	 * @returns If the custom field is changed in the current transaction, the previous value of the field. Otherwise, the current value of the field
+	 */
+	oldValue<K extends keyof F>(field: K): unknown;
+
+	/**
+	 * Asserts that a value is set for a custom field.
+	 * If a value for the required field is not set, the specified message is displayed in the user interface.
+	 * @param fieldName The name of the custom field to check
+	 * @param message The message that is displayed to the user that describes the field requirement
+	 */
+	required(fieldName: string, message?: string): void;
+} & F // Custom fields
+
+/**
+ * Represents a value that is stored in a custom field.
+ * @extends BaseEntity
+ * @since 2018.1
+ */
+export class Field extends BaseEntity {
+	/** Date and time field type. Used when defining rule requirements */
+	static readonly dateTimeType = FieldType.dateTimeType;
+
+	/** Date field type. Used when defining rule requirements */
+	static readonly dateType = FieldType.dateType;
+
+	/** Float field type. Used when defining rule requirements */
+	static readonly floatType = FieldType.floatType;
+
+	/** Integer field type. Used when defining rule requirements */
+	static readonly integerType = FieldType.integerType;
+
+	/** Period field type. Used when defining rule requirements */
+	static readonly periodType = FieldType.periodType;
+
+	/** String field type. Used when defining rule requirements */
+	static readonly stringType = FieldType.stringType;
+
+	/** Text field type. Used when defining rule requirements */
+	static readonly textType = FieldType.textType;
+
+	/** The background color of the value in the custom field as it is displayed in YouTrack */
+	readonly backgroundColor: string;
+
+	/** The index value of the color that is assigned to the value in the custom field */
+	readonly colorIndex: number;
+
+	/** The description of the value as visible in the administrative UI for custom fields */
+	readonly description: string;
+
+	/** The foreground color of the value in the custom field as it is displayed in YouTrack */
+	readonly foregroundColor: string;
+
+	/** If the value is archived, this property is true */
+	readonly isArchived: boolean;
+
+	/** The name of the value, which is also stored as the value in the custom field */
+	readonly name: string;
+
+	/** The position of the value in the set of values for the custom field */
+	readonly ordinal: number;
+
+	/** String representation of the value */
+	readonly presentation: string;
+}
+
+/**
+ * Represents a value in a custom field that stores a predefined set of values.
+ * @extends Field
+ * @since 2018.1
+ */
+export class EnumField<T extends string = ""> extends Field {
+	/** Field type. Used when defining rule requirements */
+	static readonly fieldType = FieldType.enumFieldType;
+
+	/** The name of the value, which is also stored as the value in the custom field */
+	name: T;
+
+	/**
+	 * Searches for EnumField entities with extension properties that match the specified query.
+	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
+	 * @returns The set of EnumField entities that contain the specified extension properties.
+	 */
+	static findByExtensionProperties(
+		extensionPropertiesQuery: Record<string, unknown>,
+	): YTSet<EnumField>;
+}
+
+/**
+ * Represents a value in a custom field that has a user associated with it.
+ * @extends Field
+ * @since 2018.1
+ */
+export class OwnedField extends Field {
+	/** Field type. Used when defining rule requirements */
+	static readonly fieldType = FieldType.ownedFieldType;
+
+	/** The user who is associated with the value */
+	readonly owner: User;
+
+	/**
+	 * Searches for OwnedField entities with extension properties that match the specified query.
+	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
+	 * @returns The set of OwnedField entities that contain the specified extension properties.
+	 */
+	static findByExtensionProperties(
+		extensionPropertiesQuery: Record<string, unknown>,
+	): YTSet<OwnedField>;
+}
+
+/**
+ * Represents a value in a custom field that stores a state type.
+ * @extends Field
+ * @since 2018.1
+ */
+export class State extends Field {
+	/** Field type. Used when defining rule requirements */
+	static readonly fieldType = FieldType.stateFieldType;
+
+	/** If issues in this state are considered to be resolved, this property is true */
+	readonly isResolved: boolean;
+
+	/**
+	 * Searches for State entities with extension properties that match the specified query.
+	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
+	 * @returns The set of State entities that contain the specified extension properties.
+	 */
+	static findByExtensionProperties(
+		extensionPropertiesQuery: Record<string, unknown>,
+	): YTSet<State>;
+}
+
+/**
+ * Represents a value in a custom field that stores a version type.
+ * @extends Field
+ * @since 2018.1
+ */
+export class ProjectVersion extends Field {
+	/** Field type. Used when defining rule requirements */
+	static readonly fieldType = FieldType.versionFieldType;
+
+	/** If the version is released, this property is true */
+	readonly isReleased: boolean;
+
+	/** The release date that is associated with the version */
+	readonly releaseDate: number;
+
+	/** The start date that is associated with the version */
+	readonly startDate: number;
+
+	/**
+	 * Searches for ProjectVersion entities with extension properties that match the specified query.
+	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
+	 * @returns The set of ProjectVersion entities that contain the specified extension properties.
+	 */
+	static findByExtensionProperties(
+		extensionPropertiesQuery: Record<string, unknown>,
+	): YTSet<ProjectVersion>;
+}
+
+/**
+ * Represents a value that is stored in a custom field that stores a build type.
+ * @extends Field
+ * @since 2018.1
+ */
+export class Build extends Field {
+	/** Field type. Used when defining rule requirements */
+	static readonly fieldType = FieldType.buildFieldType;
+
+	/** The date and time when the build was assembled */
+	readonly assembleDate: number;
+
+	/**
+	 * Searches for Build entities with extension properties that match the specified query.
+	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
+	 * @returns The set of Build entities that contain the specified extension properties.
+	 */
+	static findByExtensionProperties(
+		extensionPropertiesQuery: Record<string, unknown>,
+	): YTSet<Build>;
+}
 
 /**
  * Represents a custom field that is available in a project.
@@ -130,246 +353,6 @@ export class ProjectCustomField extends BaseEntity {
 	 * @returns If the field was equal to the expected value, returns true
 	 */
 	was(fieldName: string, expected: string): boolean;
-}
-
-/**
- * Class representing operations on custom fields used in issues.
- * The actual set of custom fields that are used for each issue is configured on a per-project basis.
- * @since 2018.1
- */
-
-export class Fields {
-	/**
-	 * Checks whether the value for a custom field is set to an expected value in the current transaction.
-	 * @param field The field to check
-	 * @param expected The expected value
-	 * @returns If the field is set to the expected value, returns true
-	 */
-	static becomes(
-		field: string | ProjectCustomField,
-		expected: unknown,
-	): boolean;
-
-	/**
-	 * Checks whether a user has permission to read the custom field.
-	 * @param field The custom field to check for read access
-	 * @param user The user for whom the permission to read the custom field is checked
-	 * @returns If the user can read the field, returns true
-	 */
-	static canBeReadBy(field: string | ProjectCustomField, user: User): boolean;
-
-	/**
-	 * Checks whether a user has permission to update the custom field.
-	 * @param field The custom field to check for update access
-	 * @param user The user for whom the permission to update the custom field is checked
-	 * @returns If the user can update the field, returns true
-	 */
-	static canBeWrittenBy(
-		field: string | ProjectCustomField,
-		user: User,
-	): boolean;
-
-	/**
-	 * Checks whether the custom field is changed in the current transaction.
-	 * @param field The name of the custom field (for example, 'State') or a reference to the field that is checked
-	 * @returns If the value of the field is changed in the current transaction, returns true
-	 */
-	static isChanged(field: string | ProjectCustomField): boolean;
-
-	/**
-	 * Returns the previous value of a single-valued custom field before an update was applied.
-	 * If the field is not changed in the transaction, returns null.
-	 * @param field The name of the custom field (for example, 'State') or a reference to the field for which the previous value is returned
-	 * @returns If the custom field is changed in the current transaction, the previous value of the field. Otherwise, the current value of the field
-	 */
-	static oldValue(field: string | ProjectCustomField): unknown;
-
-	/**
-	 * Asserts that a value is set for a custom field.
-	 * If a value for the required field is not set, the specified message is displayed in the user interface.
-	 * @param fieldName The name of the custom field to check
-	 * @param message The message that is displayed to the user that describes the field requirement
-	 */
-	static required(fieldName: string, message?: string): void;
-
-	/**
-	 * Returns the value of a custom field.
-	 */
-	[key: string]:
-		| Field
-		| string
-		| number
-		| boolean
-		| User
-		| Project
-		| Date
-		| null
-		| undefined;
-}
-
-/**
- * Represents a value that is stored in a custom field.
- * @extends BaseEntity
- * @since 2018.1
- */
-export class Field extends BaseEntity {
-	/** Date and time field type. Used when defining rule requirements */
-	static readonly dateTimeType: string;
-
-	/** Date field type. Used when defining rule requirements */
-	static readonly dateType: string;
-
-	/** Float field type. Used when defining rule requirements */
-	static readonly floatType: string;
-
-	/** Integer field type. Used when defining rule requirements */
-	static readonly integerType: string;
-
-	/** Period field type. Used when defining rule requirements */
-	static readonly periodType: string;
-
-	/** String field type. Used when defining rule requirements */
-	static readonly stringType: string;
-
-	/** Text field type. Used when defining rule requirements */
-	static readonly textType: string;
-
-	/** The background color of the value in the custom field as it is displayed in YouTrack */
-	readonly backgroundColor: string;
-
-	/** The index value of the color that is assigned to the value in the custom field */
-	readonly colorIndex: number;
-
-	/** The description of the value as visible in the administrative UI for custom fields */
-	readonly description: string;
-
-	/** The foreground color of the value in the custom field as it is displayed in YouTrack */
-	readonly foregroundColor: string;
-
-	/** If the value is archived, this property is true */
-	readonly isArchived: boolean;
-
-	/** The name of the value, which is also stored as the value in the custom field */
-	readonly name: string;
-
-	/** The position of the value in the set of values for the custom field */
-	readonly ordinal: number;
-
-	/** String representation of the value */
-	readonly presentation: string;
-}
-
-/**
- * Represents a value in a custom field that stores a predefined set of values.
- * @extends Field
- * @since 2018.1
- */
-export class EnumField extends Field {
-	/** Field type. Used when defining rule requirements */
-	static readonly fieldType: string;
-
-	/**
-	 * Searches for EnumField entities with extension properties that match the specified query.
-	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
-	 * @returns The set of EnumField entities that contain the specified extension properties.
-	 */
-	static findByExtensionProperties(
-		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<EnumField>;
-}
-
-/**
- * Represents a value in a custom field that has a user associated with it.
- * @extends Field
- * @since 2018.1
- */
-export class OwnedField extends Field {
-	/** Field type. Used when defining rule requirements */
-	static readonly fieldType: string;
-
-	/** The user who is associated with the value */
-	readonly owner: User;
-
-	/**
-	 * Searches for OwnedField entities with extension properties that match the specified query.
-	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
-	 * @returns The set of OwnedField entities that contain the specified extension properties.
-	 */
-	static findByExtensionProperties(
-		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<OwnedField>;
-}
-
-/**
- * Represents a value in a custom field that stores a state type.
- * @extends Field
- * @since 2018.1
- */
-export class State extends Field {
-	/** Field type. Used when defining rule requirements */
-	static readonly fieldType: string;
-
-	/** If issues in this state are considered to be resolved, this property is true */
-	readonly isResolved: boolean;
-
-	/**
-	 * Searches for State entities with extension properties that match the specified query.
-	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
-	 * @returns The set of State entities that contain the specified extension properties.
-	 */
-	static findByExtensionProperties(
-		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<State>;
-}
-
-/**
- * Represents a value in a custom field that stores a version type.
- * @extends Field
- * @since 2018.1
- */
-export class ProjectVersion extends Field {
-	/** Field type. Used when defining rule requirements */
-	static readonly fieldType: string;
-
-	/** If the version is released, this property is true */
-	readonly isReleased: boolean;
-
-	/** The release date that is associated with the version */
-	readonly releaseDate: number;
-
-	/** The start date that is associated with the version */
-	readonly startDate: number;
-
-	/**
-	 * Searches for ProjectVersion entities with extension properties that match the specified query.
-	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
-	 * @returns The set of ProjectVersion entities that contain the specified extension properties.
-	 */
-	static findByExtensionProperties(
-		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<ProjectVersion>;
-}
-
-/**
- * Represents a value that is stored in a custom field that stores a build type.
- * @extends Field
- * @since 2018.1
- */
-export class Build extends Field {
-	/** Field type. Used when defining rule requirements */
-	static readonly fieldType: string;
-
-	/** The date and time when the build was assembled */
-	readonly assembleDate: number;
-
-	/**
-	 * Searches for Build entities with extension properties that match the specified query.
-	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
-	 * @returns The set of Build entities that contain the specified extension properties.
-	 */
-	static findByExtensionProperties(
-		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<Build>;
 }
 
 /**

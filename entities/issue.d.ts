@@ -1,27 +1,12 @@
+import type { ActionContext, ActionUserInputType, InputStream, RuleContext } from "../utils";
 import type { BaseEntity, YTSet, Requirements, PersistentFile } from "./core";
 import type { IssueWorkItem, WorkItemType } from "./workitem";
 import type { PullRequest, VcsChange } from "./vcs";
 import type { Calendar, Channel } from "./helpdesk";
 import type { User, UserGroup } from "./user";
-import type { Fields, Field } from "./field";
-import type { InputStream } from "../util";
 import type { Project } from "./project";
+import type { Fields } from "./field";
 import type { Tag } from "./tag";
-
-/**
- * Context object passed to Issue rule functions.
- */
-export interface IssueRuleContext {
-	/** The issue being processed */
-	issue: Issue;
-	/** The current user */
-	currentUser: User;
-	/** The breached field name (for SLA rules) */
-	breachedField?: string;
-
-	/** Custom fields */
-	[key: string]: Field | Issue | User | string | undefined;
-}
 
 /**
  * The base class for issue and article comments.
@@ -89,15 +74,16 @@ export class IssueAttachment extends PersistentFile {
 	 * @param ruleProperties JSON object that defines the properties for the rule.
 	 * @returns The object representation of the rule.
 	 */
-	static action(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
 		title: string;
+		command: string;
 		userInput?: {
-			type: string | object;
-			description: string;
-		};
-		guard?: (ctx: IssueAttachmentActionContext) => boolean;
-		action: (ctx: IssueAttachmentActionContext) => void;
-		requirements?: Requirements;
+			type: T;
+			description?: string;
+		} | null;
+		guard?: (ctx: ActionContext<R, T>) => boolean;
+		action: (ctx: ActionContext<R, T>) => void;
+		requirements?: R;
 	}): object;
 
 	/**
@@ -115,7 +101,7 @@ export class IssueAttachment extends PersistentFile {
  * @extends BaseEntity
  * @since 2018.1
  */
-export class Issue extends BaseEntity {
+export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	/** The text that is entered as the issue summary. */
 	summary: string;
 
@@ -123,7 +109,7 @@ export class Issue extends BaseEntity {
 	description: string;
 
 	/** The project to which the issue is assigned. */
-	readonly project: Project;
+	project: Project;
 
 	/** The user who reported (created) the issue. */
 	readonly reporter: User;
@@ -132,7 +118,7 @@ export class Issue extends BaseEntity {
 	readonly comments: YTSet<IssueComment>;
 
 	/** The custom fields that are used in an issue. */
-	readonly fields: Fields;
+	readonly fields: Fields<F>;
 
 	/** The set of attachments that are attached to the issue. */
 	readonly attachments: YTSet<IssueAttachment>;
@@ -247,16 +233,16 @@ export class Issue extends BaseEntity {
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
-	static action(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
-			type: string | object;
-			description: string;
-		};
-		guard?: (ctx: IssueRuleContext) => boolean;
-		action: (ctx: IssueRuleContext) => void;
-		requirements?: Requirements;
+			type: T;
+			description?: string;
+		} | null;
+		guard?: (ctx: ActionContext<R, T>) => boolean;
+		action: (ctx: ActionContext<R, T>) => void;
+		requirements?: R;
 	}): object;
 
 	/**
@@ -298,11 +284,11 @@ export class Issue extends BaseEntity {
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
-	static onChange(ruleProperties: {
+	static onChange<R extends Requirements>(ruleProperties: {
 		title: string;
-		guard?: (ctx: IssueRuleContext) => boolean;
-		action: (ctx: IssueRuleContext) => void;
-		requirements?: Requirements;
+		guard?: (ctx: RuleContext<R>) => boolean;
+		action: (ctx: RuleContext<R>) => void;
+		requirements?: R;
 		runOn?: {
 			change?: boolean;
 			removal?: boolean;
@@ -314,14 +300,15 @@ export class Issue extends BaseEntity {
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
-	static onSchedule(ruleProperties: {
+	static onSchedule<R extends Requirements>(ruleProperties: {
 		title: string;
 		search: string | (() => string);
 		cron: string;
 		muteUpdateNotifications?: boolean;
 		modifyUpdatedProperties?: boolean;
-		action: (ctx: IssueRuleContext) => void;
-		requirements?: Requirements;
+		guard?: (ctx: RuleContext<R>) => boolean;
+		action: (ctx: RuleContext<R>) => void;
+		requirements?: R;
 	}): object;
 
 	/**
@@ -329,13 +316,13 @@ export class Issue extends BaseEntity {
 	 * @param ruleProperties A JSON object that defines the properties for the SLA policy
 	 * @returns The object representation of the SLA policy
 	 */
-	static sla(ruleProperties: {
+	static sla<R extends Requirements>(ruleProperties: {
 		title: string;
-		guard?: (ctx: IssueRuleContext) => boolean;
-		onEnter?: (ctx: IssueRuleContext) => void;
-		action?: (ctx: IssueRuleContext) => void;
-		onBreach?: (ctx: IssueRuleContext) => void;
-		requirements?: Requirements;
+		guard?: (ctx: RuleContext<R>) => boolean;
+		onEnter?: (ctx: RuleContext<R>) => void;
+		action?: (ctx: RuleContext<R>) => void;
+		onBreach?: (ctx: RuleContext<R>) => void;
+		requirements?: R;
 	}): object;
 
 	/**
@@ -495,7 +482,7 @@ export class Issue extends BaseEntity {
 	 * @param fieldName The name of the field to check
 	 * @returns If the value of the field is changed in the current transaction, returns `true`
 	 */
-	isChanged(fieldName: string): boolean;
+	isChanged<K extends keyof F>(fieldName: K): boolean;
 
 	/**
 	 * Checks whether the issue is accessible by specified user.
@@ -509,9 +496,7 @@ export class Issue extends BaseEntity {
 	 * @param fieldName The name of the field
 	 * @returns If the field is changed in the current transaction, the previous value of the field. Otherwise, null
 	 */
-	oldValue(
-		fieldName: string,
-	): string | number | boolean | Date | User | BaseEntity | null;
+	oldValue<K extends keyof F>(fieldName: K): F[K] | null;
 
 	/**
 	 * Pauses the timers for the current SLA applied to the issue.
@@ -538,7 +523,7 @@ export class Issue extends BaseEntity {
 	 * @param fieldName The name of the field to check
 	 * @param message The message that is displayed to the user that describes the field requirement
 	 */
-	required(fieldName: string, message?: string): void;
+	required<K extends keyof F>(fieldName: K, message?: string): void;
 
 	/**
 	 * Resumes the timers for the current SLA applied to the issue.
@@ -553,7 +538,7 @@ export class Issue extends BaseEntity {
 	 * @returns If the field was equal to the expected value, returns `true`
 	 * @since 2019.2.55603
 	 */
-	was(fieldName: string, expected: string): boolean;
+	was<K extends keyof F>(fieldName: K, expected: F[K]): boolean;
 
 	/**
 	 * Attaches a file to the issue.
@@ -877,15 +862,16 @@ export class IssueComment extends BaseComment {
 	 * @param ruleProperties JSON object that defines the properties for the rule.
 	 * @returns The object representation of the rule.
 	 */
-	static action(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
 		title: string;
+		command: string;
 		userInput?: {
-			type: string | object;
-			description: string;
-		};
-		guard?: (ctx: IssueCommentActionContext) => boolean;
-		action: (ctx: IssueCommentActionContext) => void;
-		requirements?: Requirements;
+			type: T;
+			description?: string;
+		} | null;
+		guard?: (ctx: ActionContext<R, T> & IssueCommentActionContext) => boolean;
+		action: (ctx: ActionContext<R, T> & IssueCommentActionContext) => void;
+		requirements?: R;
 	}): object;
 
 	/**
