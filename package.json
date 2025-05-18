@@ -1,6 +1,6 @@
 {
   "name": "youtrack-workflow-api-types",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript definitions for @jetbrains/youtrack-scripting-api",
   "main": "index.d.ts",
   "types": "index.d.ts",
