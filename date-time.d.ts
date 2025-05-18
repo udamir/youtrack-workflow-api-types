@@ -8,10 +8,205 @@
  */
 
 /**
- * Represents a time period.
+ * Represents a time period in the ISO-8601 format.
+ * Maps to org.joda.time.Period
  */
 export interface Period {
-  [key: string]: unknown;
+  /**
+   * Gets the number of years in this period.
+   */
+  getYears(): number;
+  
+  /**
+   * Gets the number of months in this period.
+   */
+  getMonths(): number;
+  
+  /**
+   * Gets the number of weeks in this period.
+   */
+  getWeeks(): number;
+  
+  /**
+   * Gets the number of days in this period.
+   */
+  getDays(): number;
+  
+  /**
+   * Gets the number of hours in this period.
+   */
+  getHours(): number;
+  
+  /**
+   * Gets the number of minutes in this period.
+   */
+  getMinutes(): number;
+  
+  /**
+   * Gets the number of seconds in this period.
+   */
+  getSeconds(): number;
+  
+  /**
+   * Gets the number of milliseconds in this period.
+   */
+  getMillis(): number;
+  
+  /**
+   * Creates a new period with the specified number of years added.
+   * @param years The amount of years to add
+   */
+  plusYears(years: number): Period;
+  
+  /**
+   * Creates a new period with the specified number of months added.
+   * @param months The amount of months to add
+   */
+  plusMonths(months: number): Period;
+  
+  /**
+   * Creates a new period with the specified number of weeks added.
+   * @param weeks The amount of weeks to add
+   */
+  plusWeeks(weeks: number): Period;
+  
+  /**
+   * Creates a new period with the specified number of days added.
+   * @param days The amount of days to add
+   */
+  plusDays(days: number): Period;
+  
+  /**
+   * Creates a new period with the specified number of hours added.
+   * @param hours The amount of hours to add
+   */
+  plusHours(hours: number): Period;
+  
+  /**
+   * Creates a new period with the specified number of minutes added.
+   * @param minutes The amount of minutes to add
+   */
+  plusMinutes(minutes: number): Period;
+  
+  /**
+   * Converts this period to its total length in milliseconds.
+   * @return The total length of the period in milliseconds
+   */
+  toStandardDuration(): number;
+  
+  /**
+   * Returns a string representation of this period.
+   */
+  toString(): string;
+}
+
+/**
+ * Represents a Joda Time DateTime - an immutable datetime class representing a datetime without a time zone.
+ * Maps to org.joda.time.DateTime
+ */
+export interface DateTime {
+  /**
+   * Gets the year of era field value.
+   */
+  getYear(): number;
+  
+  /**
+   * Gets the month of year field value.
+   */
+  getMonthOfYear(): number;
+  
+  /**
+   * Gets the day of month field value.
+   */
+  getDayOfMonth(): number;
+  
+  /**
+   * Gets the day of week field value.
+   */
+  getDayOfWeek(): number;
+  
+  /**
+   * Gets the hour of day field value.
+   */
+  getHourOfDay(): number;
+  
+  /**
+   * Gets the minute of hour field value.
+   */
+  getMinuteOfHour(): number;
+  
+  /**
+   * Gets the second of minute field value.
+   */
+  getSecondOfMinute(): number;
+  
+  /**
+   * Gets the millis of second field value.
+   */
+  getMillisOfSecond(): number;
+  
+  /**
+   * Gets the milliseconds of the datetime instant from the Java epoch of 1970-01-01T00:00:00Z.
+   */
+  getMillis(): number;
+  
+  /**
+   * Returns a copy of this datetime plus the specified period.
+   * @param period The period to add
+   */
+  plus(period: Period): DateTime;
+  
+  /**
+   * Returns a copy of this datetime minus the specified period.
+   * @param period The period to subtract
+   */
+  minus(period: Period): DateTime;
+  
+  /**
+   * Returns a copy of this datetime with the specified year.
+   * @param year The year to set
+   */
+  withYear(year: number): DateTime;
+  
+  /**
+   * Returns a copy of this datetime with the specified month of year.
+   * @param monthOfYear The month of year to set (1-12)
+   */
+  withMonthOfYear(monthOfYear: number): DateTime;
+  
+  /**
+   * Returns a copy of this datetime with the specified day of month.
+   * @param dayOfMonth The day of month to set (1-31)
+   */
+  withDayOfMonth(dayOfMonth: number): DateTime;
+  
+  /**
+   * Compares this object with the specified object for equality.
+   * @param other The object to compare with
+   */
+  equals(other: DateTime): boolean;
+  
+  /**
+   * Is this datetime before the instant passed in.
+   * @param other The datetime to compare to
+   */
+  isBefore(other: DateTime): boolean;
+  
+  /**
+   * Is this datetime after the instant passed in.
+   * @param other The datetime to compare to
+   */
+  isAfter(other: DateTime): boolean;
+  
+  /**
+   * Converts this object to a java.util.Date.
+   */
+  toDate(): Date;
+  
+  /**
+   * Returns a string representation of this datetime.
+   */
+  toString(): string;
 }
 
 /**

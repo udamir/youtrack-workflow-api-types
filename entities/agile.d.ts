@@ -1,5 +1,4 @@
 import type { BaseEntity, YTSet } from "./core";
-import type { Project } from "./project";
 import type { Issue } from "./issue";
 import type { User } from "./user";
 
@@ -9,14 +8,10 @@ import type { User } from "./user";
 export class Agile extends BaseEntity {
   /** Name of the board */
   readonly name: string;
-  /** Projects associated with this board */
-  readonly projects: YTSet<Project>;
   /** Sprints in this board */
   readonly sprints: YTSet<Sprint>;
-  /** Owner of the board */
-  readonly owner: User;
-  /** Whether the board is visible to everyone */
-  readonly isVisible: boolean;
+  /** Author of the board */
+  readonly author: User;
   /** Current sprint of the board */
   readonly currentSprint: Sprint | null;
   
@@ -29,16 +24,52 @@ export class Agile extends BaseEntity {
   createSprint(name: string, start: number, finish: number): Sprint;
   
   /**
-   * Gets a sprint by name
+   * Finds a sprint by name
    * @param name Sprint name
+   * @returns Sprint or null if not found
    */
-  getSprint(name: string): Sprint | null;
+  findSprintByName(name: string): Sprint | null;
+
+  /**
+   * Gets all sprints of this board where the issue belongs.
+   * @param issue The issue for which you want to get the sprints that it is assigned to.
+   */
+  getSprints(issue: Issue): YTSet<Sprint>;
   
+  /**
+   * Adds the issue to the current sprint of the board.
+   * @param issue Issue to add
+   */
+  addIssue(issue: Issue): void;
+
+  /**
+   * Removes the issue from the current sprint of the board.
+   * @param issue Issue to remove
+   */
+  removeIssue(issue: Issue): void;
+  /**
+   * Returns a set of sprints to which the issue has been added.
+   * @param issue The issue for which added sprints are returned.
+   */
+  getAddedSprints(issue: Issue): YTSet<Sprint>;
+
+  /**
+   * Returns the sprints that an issue is assigned to on an agile board.
+   * @param issue The issue for which you want to get the sprints that it is assigned to.
+   */
+  getIssueSprints(issue: Issue): YTSet<Sprint>;
+
+  /**
+   * Gets all sprints of this board from which the issue is removed during the current transaction.
+   * @param issue The issue for which removed sprints are returned.
+   */
+  getRemovedSprints(issue: Issue): YTSet<Sprint>;
+
   /**
    * Static method to find a board by name
    * @param name Board name
    */
-  static findBoard(name: string): Agile;
+  static findByName(name: string): YTSet<Agile>;
 }
 
 /**
@@ -53,12 +84,8 @@ export class Sprint extends BaseEntity {
   readonly finish: number;
   /** Agile board this sprint belongs to */
   readonly agile: Agile;
-  /** Status of the sprint */
-  readonly status: string;
-  /** Issues in this sprint */
-  readonly issues: YTSet<Issue>;
   /** Whether the sprint is archived */
-  readonly archived: boolean;
+  readonly isArchived: boolean;
   
   /**
    * Adds an issue to the sprint
@@ -73,7 +100,8 @@ export class Sprint extends BaseEntity {
   removeIssue(issue: Issue): void;
   
   /**
-   * Archives the sprint
+   * Checks whether the specified issue is represented as a swimlane on the agile board that the sprint belongs to.
+   * @param issue The issue for which you want to check if it is a swimlane
    */
-  archive(): void;
+  isSwimlane(issue: Issue): boolean;
 }

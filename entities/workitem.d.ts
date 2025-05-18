@@ -12,23 +12,23 @@ import type { User } from './user';
  * @extends BaseEntity
  * @since 2018.1.38923
  */
-export class WorkItemType extends BaseEntity {
+export class WorkItemType<T extends string> extends BaseEntity {
   /** The name of the work item type. */
-  readonly name: string;
+  readonly name: T;
   
   /**
    * Searches for WorkItemType entities with extension properties that match the specified query.
    * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
    * @returns The set of WorkItemType entities that contain the specified extension properties.
    */
-  static findByExtensionProperties(extensionPropertiesQuery: Record<string, unknown>): YTSet<WorkItemType>;
+  static findByExtensionProperties<T extends string>(extensionPropertiesQuery: Record<string, unknown>): YTSet<WorkItemType<T>>;
   
   /**
    * Returns the set of work item types that are available in a project.
    * @param project The project for which work item types are returned.
    * @returns The set of available work item types for the specified project.
    */
-  static findByProject(project: Project): YTSet<WorkItemType>;
+  static findByProject<T extends string>(project: Project): YTSet<WorkItemType<T>>;
 }
 
 /**
@@ -88,7 +88,7 @@ export class WorkItemProjectAttribute extends BaseEntity {
  * @extends BaseEntity
  * @since 2018.1.38923
  */
-export class BaseWorkItem extends BaseEntity {
+export class BaseWorkItem<T extends string> extends BaseEntity {
   /** The user to whom the work is attributed in the work item. */
   readonly author: User;
   
@@ -102,7 +102,7 @@ export class BaseWorkItem extends BaseEntity {
   description: string;
   
   /** The work item type. */
-  type: WorkItemType;
+  type: WorkItemType<T>;
   
   /** The date when the work item was last updated. */
   readonly updated: number;
@@ -113,7 +113,7 @@ export class BaseWorkItem extends BaseEntity {
  * @extends BaseWorkItem
  * @since 2018.2.42312
  */
-export class IssueWorkItem extends BaseWorkItem {
+export class IssueWorkItem<T extends string> extends BaseWorkItem<T> {
   /** Custom work item attributes. */
   readonly attributes: WorkItemAttributes;
   
@@ -128,7 +128,7 @@ export class IssueWorkItem extends BaseWorkItem {
    * @param extensionPropertiesQuery Key-value pairs representing properties and their values.
    * @returns The set of IssueWorkItem entities that contain the specified extension properties.
    */
-  static findByExtensionProperties(extensionPropertiesQuery: Record<string, unknown>): YTSet<IssueWorkItem>;
+  static findByExtensionProperties<T extends string>(extensionPropertiesQuery: Record<string, unknown>): YTSet<IssueWorkItem<T>>;
   
   /**
    * Permanently deletes the work item.

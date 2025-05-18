@@ -64,7 +64,7 @@ export class BaseEntity {
 	 */
 	oldValue(
 		fieldName: string,
-	): string | number | boolean | Date | User | BaseEntity | null;
+	): unknown | null;
 
 	/**
 	 * Asserts that a value is set for a field
@@ -78,7 +78,7 @@ export class BaseEntity {
 	 * @param fieldName The name of the field to check
 	 * @param expected The expected value
 	 */
-	was(fieldName: string, expected: string): boolean;
+	was(fieldName: string, expected: unknown): boolean;
 }
 
 /**

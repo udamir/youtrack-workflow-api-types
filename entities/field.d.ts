@@ -61,14 +61,14 @@ export type Fields<F> = {
 	 * @param message The message that is displayed to the user that describes the field requirement
 	 */
 	required(fieldName: string, message?: string): void;
-} & F // Custom fields
+} & F
 
 /**
  * Represents a value that is stored in a custom field.
  * @extends BaseEntity
  * @since 2018.1
  */
-export class Field extends BaseEntity {
+export class Field<T extends string = string> extends BaseEntity {
 	/** Date and time field type. Used when defining rule requirements */
 	static readonly dateTimeType = FieldType.dateTimeType;
 
@@ -106,13 +106,16 @@ export class Field extends BaseEntity {
 	readonly isArchived: boolean;
 
 	/** The name of the value, which is also stored as the value in the custom field */
-	readonly name: string;
+	readonly name: T;
 
 	/** The position of the value in the set of values for the custom field */
 	readonly ordinal: number;
 
 	/** String representation of the value */
 	readonly presentation: string;
+
+	// Add method to support direct assignment of enum values
+	setValue(value: T): void;
 }
 
 /**
@@ -120,12 +123,9 @@ export class Field extends BaseEntity {
  * @extends Field
  * @since 2018.1
  */
-export class EnumField<T extends string = ""> extends Field {
+export class EnumField<T extends string = string> extends Field<T> {
 	/** Field type. Used when defining rule requirements */
 	static readonly fieldType = FieldType.enumFieldType;
-
-	/** The name of the value, which is also stored as the value in the custom field */
-	name: T;
 
 	/**
 	 * Searches for EnumField entities with extension properties that match the specified query.
@@ -142,7 +142,7 @@ export class EnumField<T extends string = ""> extends Field {
  * @extends Field
  * @since 2018.1
  */
-export class OwnedField extends Field {
+export class OwnedField<T extends string = string> extends Field {
 	/** Field type. Used when defining rule requirements */
 	static readonly fieldType = FieldType.ownedFieldType;
 
@@ -164,10 +164,10 @@ export class OwnedField extends Field {
  * @extends Field
  * @since 2018.1
  */
-export class State extends Field {
+export class State<T extends string = string> extends Field<T> {
 	/** Field type. Used when defining rule requirements */
 	static readonly fieldType = FieldType.stateFieldType;
-
+	
 	/** If issues in this state are considered to be resolved, this property is true */
 	readonly isResolved: boolean;
 
@@ -186,7 +186,7 @@ export class State extends Field {
  * @extends Field
  * @since 2018.1
  */
-export class ProjectVersion extends Field {
+export class ProjectVersion<T extends string = string> extends Field<T> {
 	/** Field type. Used when defining rule requirements */
 	static readonly fieldType = FieldType.versionFieldType;
 
@@ -214,7 +214,7 @@ export class ProjectVersion extends Field {
  * @extends Field
  * @since 2018.1
  */
-export class Build extends Field {
+export class Build<T extends string = string> extends Field<T> {
 	/** Field type. Used when defining rule requirements */
 	static readonly fieldType = FieldType.buildFieldType;
 

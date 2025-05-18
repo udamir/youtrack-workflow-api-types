@@ -2,7 +2,6 @@ import type {
 	Build,
 	BundleProjectCustomField,
 	EnumField,
-	Fields,
 	GroupProjectCustomField,
 	OwnedField,
 	PeriodProjectCustomField,
@@ -13,7 +12,9 @@ import type {
 	UserProjectCustomField,
 } from "./entities/field";
 import type { Requirement, Requirements } from "./entities";
-import type { Issue, User, Tag, UserGroup, Project } from "./entities";
+// biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
+import type { Issue, User, Tag, UserGroup, Project, Set } from "./entities";
+import type { Period } from "./date-time"
 
 export enum FieldType {
 	dateTimeType = "dateTimeType",
@@ -134,81 +135,10 @@ export type FieldFromRequirement<T extends ActionUserInputType> = T extends
 											: T extends UserGroup ? UserGroup
 												: never;
 
+type IssueSingleFieldType<T extends string> = string | number | User | State<T> | EnumField<T> | Build<T> | ProjectVersion<T> | Period;
+type IssueMultiFieldType<T extends string> = Set<IssueSingleFieldType<T>>;
+type IssueFieldType<T extends string = string> = IssueSingleFieldType<T> | IssueMultiFieldType<T>;
 
-  type FieldTypeString =
-  | FieldType.stringType
-  | FieldType.textType
-  | FieldType.floatType
-  | FieldType.integerType
-  | FieldType.dateType
-  | FieldType.dateTimeType
-  | FieldType.periodType
-  | FieldType.enumFieldType
-  | FieldType.userFieldType
-  | FieldType.stateFieldType
-  | FieldType.versionFieldType
-  | FieldType.buildFieldType;
-
-type FieldTypeMap = {
-  [FieldType.stringType]: string;
-  [FieldType.textType]: string;
-  [FieldType.floatType]: number;
-  [FieldType.integerType]: number;
-  [FieldType.dateType]: Date;
-  [FieldType.dateTimeType]: Date;
-  [FieldType.periodType]: string;
-  [FieldType.userFieldType]: User;
-  [FieldType.stateFieldType]: State;
-  [FieldType.versionFieldType]: ProjectVersion;
-  [FieldType.buildFieldType]: Build;
-};
-
-type IsValidFieldType<T> =
-  T extends FieldTypeString ? true :
-  T extends { fieldType: FieldTypeString } ? true :
-  false;
-
-type ExtractEnumValue<K extends string, V> =
-  V extends { name: infer N extends string } ? N : K;
-
-type ExtractEnumValues<T extends Requirement> = {
-  [K in keyof T]:
-    K extends "type" | "name" ? never :
-    ExtractEnumValue<K & string, T[K]>
-}[keyof T & string];
-
-type FieldValue<RVal extends Requirement> =
-  RVal["type"] extends typeof EnumField.fieldType
-    ? EnumField<ExtractEnumValues<RVal>>
-    : RVal["type"] extends keyof FieldTypeMap
-      ? FieldTypeMap[RVal["type"]]
-      : RVal["type"] extends { fieldType: infer FT extends FieldTypeString }
-        ? FT extends keyof FieldTypeMap
-          ? FieldTypeMap[FT]
-          : never
-        : never;
-
-type FieldName<RKey extends string, RVal extends Requirement> =
-  RVal["name"] extends string ? RVal["name"] : RKey;
-
-
-/**
- * Extracts field names and their values from requirements
- */
-type ExtractFieldsFromRequirements<R extends Record<string, Requirement>> = {
-  [K in keyof R as IsValidFieldType<R[K]["type"]> extends true
-    ? FieldName<K & string, R[K]>
-    : never
-  ]: FieldValue<R[K]>
-};
-
-/**
- * Creates a strongly-typed Fields object from requirements definition
- * Includes both the fields and the field methods (isChanged, required, etc.)
- */
-export type FieldsFromRequirements<R extends Record<string, Requirement>> = 
-  Fields<ExtractFieldsFromRequirements<R>>;            
-                    
 /**
  * Base context interface for rule functions
  *
@@ -220,7 +150,7 @@ export type FieldsFromRequirements<R extends Record<string, Requirement>> =
 export type RuleContext<R extends Requirements> =
 	ProjectCustomFieldsFromRequirements<R> & {
 		/** The current issue being processed */
-		issue: Issue<FieldsFromRequirements<R>>;
+		issue: Issue;
 		/** The current user executing the rule */
 		currentUser: User;
 	};

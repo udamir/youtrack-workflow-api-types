@@ -1,4 +1,10 @@
-import type { ActionContext, ActionUserInputType, InputStream, RuleContext } from "../utils";
+import type {
+	ActionContext,
+	ActionUserInputType,
+	InputStream,
+	IssueFieldType,
+	RuleContext,
+} from "../utils";
 import type { BaseEntity, YTSet, Requirements, PersistentFile } from "./core";
 import type { IssueWorkItem, WorkItemType } from "./workitem";
 import type { PullRequest, VcsChange } from "./vcs";
@@ -74,7 +80,10 @@ export class IssueAttachment extends PersistentFile {
 	 * @param ruleProperties JSON object that defines the properties for the rule.
 	 * @returns The object representation of the rule.
 	 */
-	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
+	static action<
+		R extends Requirements,
+		T extends ActionUserInputType,
+	>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
@@ -101,7 +110,10 @@ export class IssueAttachment extends PersistentFile {
  * @extends BaseEntity
  * @since 2018.1
  */
-export class Issue<F = Record<string, unknown>> extends BaseEntity {
+export class Issue<
+	F extends Record<string, IssueFieldType> = Record<string, IssueFieldType>,
+	W extends string = string,
+> extends BaseEntity {
 	/** The text that is entered as the issue summary. */
 	summary: string;
 
@@ -125,13 +137,13 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 
 	/** Issue links (e.g. `relates to`, `parent for`, etc.). Each link is a Set of Issue objects. */
 	readonly links: {
-		[key: string]: YTSet<Issue>;
-		added: YTSet<Issue>;
-		removed: YTSet<Issue>;
+		[key: string]: YTSet<Issue<F, W>>;
+		added: YTSet<Issue<F, W>>;
+		removed: YTSet<Issue<F, W>>;
 	};
 
 	/** The set of work items that have been added to the issue. */
-	readonly workItems: YTSet<IssueWorkItem>;
+	readonly workItems: YTSet<IssueWorkItem<W>>;
 
 	/** If the issue becomes reported in the current transaction, this property is true. */
 	readonly becomesReported: boolean;
@@ -149,13 +161,13 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	readonly created: number;
 
 	/** The root issue in a tree of duplicates that are linked to the issue. */
-	readonly duplicateRoot: Issue;
+	readonly duplicateRoot: Issue<F, W>;
 
 	/** The set of comments that are edited in the current transaction. */
 	readonly editedComments: YTSet<IssueComment>;
 
 	/** The set of work items that are edited in the current transaction. */
-	readonly editedWorkItems: YTSet<IssueWorkItem>;
+	readonly editedWorkItems: YTSet<IssueWorkItem<W>>;
 
 	/** If the issue is already reported or becomes reported in the current transaction, this property is true. */
 	readonly isReported: boolean;
@@ -233,7 +245,10 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
-	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
+	static action<
+		R extends Requirements,
+		T extends ActionUserInputType,
+	>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
@@ -252,7 +267,10 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	 * @returns Newly created issue draft
 	 * @since 2025.1
 	 */
-	static createDraft(project: Project, reporter: User): Issue;
+	static createDraft<
+		F extends Record<string, IssueFieldType>,
+		W extends string,
+	>(project: Project, reporter: User): Issue<F, W>;
 
 	/**
 	 * Creates a new shared issue draft.
@@ -260,7 +278,10 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	 * @returns Newly created issue draft
 	 * @since 2025.1
 	 */
-	static createSharedDraft(project: Project): Issue;
+	static createSharedDraft<
+		F extends Record<string, IssueFieldType>,
+		W extends string,
+	>(project: Project): Issue<F, W>;
 
 	/**
 	 * Searches for Issue entities with extension properties that match the specified query.
@@ -268,16 +289,19 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	 * @returns The set of Issue entities that contain the specified extension properties
 	 * @since 2024.3.43260
 	 */
-	static findByExtensionProperties(
-		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<Issue>;
+	static findByExtensionProperties<
+		F extends Record<string, IssueFieldType>,
+		W extends string,
+	>(extensionPropertiesQuery: Record<string, unknown>): YTSet<Issue<F, W>>;
 
 	/**
 	 * Finds an issue by its visible ID.
 	 * @param id The issue ID
 	 * @returns The issue that is assigned the specified ID
 	 */
-	static findById(id: string): Issue;
+	static findById<F extends Record<string, IssueFieldType>, W extends string>(
+		id: string,
+	): Issue<F, W>;
 
 	/**
 	 * Creates a declaration of a rule that is triggered when a change is applied to an issue.
@@ -406,8 +430,8 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 		date: number,
 		author: User,
 		duration: number,
-		type: WorkItemType,
-	): IssueWorkItem;
+		type: WorkItemType<W>,
+	): IssueWorkItem<W>;
 
 	/**
 	 * Adds a work item to the issue using JSON specification.
@@ -419,8 +443,8 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 		date: number;
 		author: User;
 		duration: number;
-		type: WorkItemType;
-	}): IssueWorkItem;
+		type: WorkItemType<W>;
+	}): IssueWorkItem<W>;
 
 	/**
 	 * Applies a command to the issue.
@@ -430,52 +454,9 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	applyCommand(command: string, runAs?: User): void;
 
 	/**
-	 * Checks whether a field is set to an expected value in the current transaction.
-	 * @param fieldName The name of the field to check
-	 * @param expected The expected value
-	 * @returns If the field is set to the expected value, returns `true`
-	 */
-
-	/**
-	 * Checks whether a user has permission to read the field.
-	 * @param fieldName The name of the field
-	 * @param user The user for whom the permission to read the field is checked
-	 * @returns If the user can read the field, returns `true`
-	 */
-
-	/**
-	 * Checks whether a user has permission to update the field.
-	 * @param fieldName The name of the field
-	 * @param user The user for whom the permission to update the field is checked
-	 * @returns If the user can update the field, returns `true`
-	 */
-
-	/**
 	 * Removes all of the attachments from the issue.
 	 */
 	clearAttachments(): void;
-
-	/**
-	 * Creates a copy of the issue.
-	 * @param project Project to create new issue in. Available since 2018.1.40575
-	 * @returns The copy of the original issue
-	 */
-	copy(project?: Project): Issue;
-
-	/**
-	 * Checks whether the specified tag is attached to an issue.
-	 * @param tagName The name of the tag to check for the issue
-	 * @returns If the specified tag is attached to the issue, returns `true`
-	 */
-	hasTag(tagName: string): boolean;
-
-	/**
-	 * Checks whether a field is equal to an expected value.
-	 * @param fieldName The name of the field to check
-	 * @param expected The expected value
-	 * @returns If the field is equal to the expected value, returns `true`
-	 * @since 2019.2.55603
-	 */
 
 	/**
 	 * Checks whether the value of a field is changed in the current transaction.
@@ -483,13 +464,6 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	 * @returns If the value of the field is changed in the current transaction, returns `true`
 	 */
 	isChanged<K extends keyof F>(fieldName: K): boolean;
-
-	/**
-	 * Checks whether the issue is accessible by specified user.
-	 * @param user The user to check
-	 * @returns If the issue is accessible for the user, returns 'true'
-	 */
-	isVisibleTo(user: User): boolean;
 
 	/**
 	 * Returns the previous value of a single-value field before an update was applied.
@@ -512,24 +486,11 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	removeTag(name: string): Tag;
 
 	/**
-	 * Converts text in markdown to HTML. Use this method to send "pretty" notifications.
-	 * @param text The string of text to convert to HTML
-	 * @returns Rendered markdown
-	 */
-	renderMarkup(text: string): string;
-
-	/**
 	 * Asserts that a value is set for a field. If a value for the required field is not set, the specified message is displayed in the user interface.
 	 * @param fieldName The name of the field to check
 	 * @param message The message that is displayed to the user that describes the field requirement
 	 */
 	required<K extends keyof F>(fieldName: K, message?: string): void;
-
-	/**
-	 * Resumes the timers for the current SLA applied to the issue.
-	 * @since 2023.1
-	 */
-	resumeSLA(): void;
 
 	/**
 	 * Checks whether a field was equal to an expected value prior to the current transaction.
@@ -539,87 +500,6 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	 * @since 2019.2.55603
 	 */
 	was<K extends keyof F>(fieldName: K, expected: F[K]): boolean;
-
-	/**
-	 * Attaches a file to the issue.
-	 * @param content The content of the file in binary or base64 form
-	 * @param name The name of the file
-	 * @param charset The charset of the file. Only applicable to text files
-	 * @param mimeType The MIME type of the file
-	 * @returns The attachment that is added to the issue
-	 * @since 2019.2.53994
-	 */
-	addAttachment(
-		content: InputStream | string,
-		name: string,
-		charset?: string,
-		mimeType?: string,
-	): IssueAttachment;
-
-	/**
-	 * Attaches a file to the issue.
-	 * @param json JSON specification of the attachment
-	 * @returns The attachment that is added to the issue
-	 * @since 2019.2.53994
-	 */
-	addAttachment(json: {
-		content: InputStream | string;
-		name: string;
-		charset?: string;
-		mimeType?: string;
-	}): IssueAttachment;
-
-	/**
-	 * Adds a comment to the issue. Makes `issue.comments.isChanged` return `true` for the current transaction.
-	 * @param text The text to add to the issue as a comment
-	 * @param author The author of the comment
-	 * @returns A newly created comment
-	 */
-	addComment(text: string, author?: User): IssueComment;
-
-	/**
-	 * Adds a comment to the issue. Makes `issue.comments.isChanged` return `true` for the current transaction.
-	 * @param json JSON specification of the comment
-	 * @returns A newly created comment
-	 */
-	addComment(json: { text: string; author?: User }): IssueComment;
-
-	/**
-	 * Adds a tag with the specified name to an issue. YouTrack adds the first matching tag that is visible to the current user.
-	 * @param name The name of the tag to add to the issue
-	 * @returns The tag that has been added to the issue
-	 */
-	addTag(name: string): Tag;
-
-	/**
-	 * Adds a work item to the issue.
-	 * @param description The description of the work item
-	 * @param date The date that is assigned to the work item
-	 * @param author The user who performed the work
-	 * @param duration The work duration in minutes
-	 * @param type The work item type
-	 * @returns The new work item
-	 */
-	addWorkItem(
-		description: string,
-		date: number,
-		author: User,
-		duration: number,
-		type: WorkItemType,
-	): IssueWorkItem;
-
-	/**
-	 * Adds a work item to the issue.
-	 * @param json JSON specification of the work item
-	 * @returns The new work item
-	 */
-	addWorkItem(json: {
-		description: string;
-		date: number;
-		author: User;
-		duration: number;
-		type: WorkItemType;
-	}): IssueWorkItem;
 
 	/**
 	 * Adds the specified number of minutes to a specified starting point in time.
@@ -638,109 +518,11 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	): number;
 
 	/**
-	 * Applies a command to the issue.
-	 * @param command The command that is applied to the issue
-	 * @param runAs Specifies the user by which the command is applied. If this parameter is not set, the command is applied on behalf of the current user
-	 */
-	applyCommand(command: string, runAs?: User): void;
-
-	/**
-	 * Checks whether a field is set to an expected value in the current transaction.
-	 * @param fieldName The name of the field to check
-	 * @param expected The expected value
-	 * @returns If the field is set to the expected value, returns `true`
-	 */
-
-	/**
-	 * Attaches a file to the issue.
-	 * @param content The content of the file in binary or base64 form
-	 * @param name The name of the file
-	 * @param charset The charset of the file
-	 * @param mimeType The MIME type of the file
-	 * @returns The attachment that is added to the issue
-	 */
-	addAttachment(
-		content: InputStream | string,
-		name: string,
-		charset?: string,
-		mimeType?: string,
-	): IssueAttachment;
-
-	/**
-	 * Adds an attachment to the issue.
-	 * @param json JSON specification of the attachment
-	 * @returns The attachment that is added to the issue
-	 */
-	addAttachment(json: {
-		content: string | InputStream;
-		name: string;
-		charset?: string;
-		mimeType?: string;
-	}): IssueAttachment;
-
-	/**
-	 * Adds a comment to the issue.
-	 * @param text The text to add to the issue as a comment
-	 * @param author The author of the comment
-	 * @returns A newly created comment
-	 */
-	addComment(text: string, author?: User): IssueComment;
-
-	/**
-	 * Adds a comment to the issue using JSON specification.
-	 * @param json JSON specification of the comment
-	 * @returns A newly created comment
-	 */
-	addComment(json: { text: string; author?: User }): IssueComment;
-
-	/**
-	 * Adds a tag with the specified name to an issue.
-	 * @param name The name of the tag to add to the issue
-	 * @returns The tag that has been added to the issue
-	 */
-	addTag(name: string): Tag;
-
-	/**
-	 * Adds a work item to the issue.
-	 * @param description The description of the work item
-	 * @param date The date that is assigned to the work item
-	 * @param author The user who performed the work
-	 * @param duration The work duration in minutes
-	 * @param type The work item type
-	 * @returns The new work item
-	 */
-	addWorkItem(
-		description: string,
-		date: number,
-		author: User,
-		duration: number,
-		type: WorkItemType,
-	): IssueWorkItem;
-
-	/**
-	 * Adds a work item to the issue.
-	 * @param json JSON specification of the work item
-	 * @returns The new work item
-	 */
-	addWorkItem(json: {
-		description: string;
-		date: number;
-		author: User;
-		duration: number;
-		type: WorkItemType;
-	}): IssueWorkItem;
-
-	/**
-	 * Removes all of the attachments from the issue.
-	 */
-	clearAttachments(): void;
-
-	/**
 	 * Creates a copy of the issue.
 	 * @param project Project to create new issue in
 	 * @returns The copy of the original issue
 	 */
-	copy(project?: Project): Issue;
+	copy(project?: Project): Issue<F, W>;
 
 	/**
 	 * Checks whether the specified tag is attached to an issue.
@@ -750,46 +532,11 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	hasTag(tagName: string): boolean;
 
 	/**
-	 * Checks whether a field is equal to an expected value.
-	 * @param fieldName The name of the field to check
-	 * @param expected The expected value
-	 * @returns If the field is equal to the expected value, returns `true`
-	 */
-
-	/**
-	 * Checks whether the value of a field is changed in the current transaction.
-	 * @param fieldName The name of the field to check
-	 * @returns If the value of the field is changed in the current transaction, returns `true`
-	 */
-	isChanged(fieldName: string): boolean;
-
-	/**
 	 * Checks whether the issue is accessible by specified user.
 	 * @param user The user to check
 	 * @returns If the issue is accessible for the user, returns 'true'
 	 */
 	isVisibleTo(user: User): boolean;
-
-	/**
-	 * Returns the previous value of a single-value field before an update was applied.
-	 * @param fieldName The name of the field
-	 * @returns If the field is changed in the current transaction, the previous value of the field. Otherwise, null.
-	 */
-	oldValue(
-		fieldName: string,
-	): string | number | boolean | Date | User | BaseEntity | null;
-
-	/**
-	 * Pauses the timers for the current SLA applied to the issue.
-	 */
-	pauseSLA(): void;
-
-	/**
-	 * Removes a tag with the specified name from an issue.
-	 * @param name The name of the tag to remove from the issue
-	 * @returns The tag that has been removed from the issue
-	 */
-	removeTag(name: string): Tag;
 
 	/**
 	 * Converts text in markdown to HTML.
@@ -799,24 +546,9 @@ export class Issue<F = Record<string, unknown>> extends BaseEntity {
 	renderMarkup(text: string): string;
 
 	/**
-	 * Asserts that a value is set for a field.
-	 * @param fieldName The name of the field to check
-	 * @param message The message that is displayed to the user that describes the field requirement
-	 */
-	required(fieldName: string, message?: string): void;
-
-	/**
 	 * Resumes the timers for the current SLA applied to the issue.
 	 */
 	resumeSLA(): void;
-
-	/**
-	 * Checks whether a field was equal to an expected value prior to the current transaction.
-	 * @param fieldName The name of the field to check
-	 * @param expected The expected value
-	 * @returns If the field was equal to the expected value, returns `true`
-	 */
-	was(fieldName: string, expected: string): boolean;
 }
 
 /**
@@ -862,7 +594,10 @@ export class IssueComment extends BaseComment {
 	 * @param ruleProperties JSON object that defines the properties for the rule.
 	 * @returns The object representation of the rule.
 	 */
-	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
+	static action<
+		R extends Requirements,
+		T extends ActionUserInputType,
+	>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
@@ -897,6 +632,19 @@ export class IssueComment extends BaseComment {
 		charset?: string,
 		mimeType?: string,
 	): IssueAttachment;
+
+	/**
+	 * Attaches a file to the issue using JSON specification.
+	 * @param json JSON specification of the attachment
+	 * @returns The attachment that is added to the issue
+	 * @since 2019.2.53994
+	 */
+	addAttachment(json: {
+		content: InputStream | string;
+		name: string;
+		charset?: string;
+		mimeType?: string;
+	}): IssueAttachment;
 
 	/**
 	 * Logically deletes the comment.
