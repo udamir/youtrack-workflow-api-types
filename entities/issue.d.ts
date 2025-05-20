@@ -1,11 +1,5 @@
-import type {
-	ActionContext,
-	ActionUserInputType,
-	InputStream,
-	IssueFieldType,
-	RuleContext,
-} from "../utils";
-import type { BaseEntity, YTSet, Requirements, PersistentFile } from "./core";
+import type { ActionContext, Requirements, ActionUserInputType, InputStream, IssueFields, RuleContext } from "../utils";
+import type { BaseEntity, YTSet, PersistentFile } from "./core";
 import type { IssueWorkItem, WorkItemType } from "./workitem";
 import type { PullRequest, VcsChange } from "./vcs";
 import type { Calendar, Channel } from "./helpdesk";
@@ -16,8 +10,6 @@ import type { Tag } from "./tag";
 
 /**
  * The base class for issue and article comments.
- * @extends BaseEntity
- * @since 2018.1.40030
  */
 export class BaseComment extends BaseEntity {
 	/** The set of attachments that are attached to the comment. */
@@ -46,8 +38,6 @@ export interface IssueAttachmentActionContext {
 
 /**
  * Represents a file that is attached to an issue.
- * @extends PersistentFile
- * @since 2021.2
  */
 export class IssueAttachment extends PersistentFile {
 	/** The user who attached the file to the issue. */
@@ -80,10 +70,7 @@ export class IssueAttachment extends PersistentFile {
 	 * @param ruleProperties JSON object that defines the properties for the rule.
 	 * @returns The object representation of the rule.
 	 */
-	static action<
-		R extends Requirements,
-		T extends ActionUserInputType,
-	>(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
@@ -107,13 +94,12 @@ export class IssueAttachment extends PersistentFile {
 
 /**
  * Represents an issue in YouTrack.
- * @extends BaseEntity
- * @since 2018.1
+ * @template F The type of the issue fields.
+ * @template W The type of the workflow.
  */
-export class Issue<
-	F extends Record<string, IssueFieldType> = Record<string, IssueFieldType>,
-	W extends string = string,
-> extends BaseEntity {
+
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export  class Issue<F extends IssueFields = any, W extends string = string> extends BaseEntity {
 	/** The text that is entered as the issue summary. */
 	summary: string;
 
@@ -121,7 +107,7 @@ export class Issue<
 	description: string;
 
 	/** The project to which the issue is assigned. */
-	project: Project;
+	project: Project<F, W>;
 
 	/** The user who reported (created) the issue. */
 	readonly reporter: User;
@@ -137,9 +123,9 @@ export class Issue<
 
 	/** Issue links (e.g. `relates to`, `parent for`, etc.). Each link is a Set of Issue objects. */
 	readonly links: {
-		[key: string]: YTSet<Issue<F, W>>;
-		added: YTSet<Issue<F, W>>;
-		removed: YTSet<Issue<F, W>>;
+		[key: string]: YTSet<Issue>;
+		added: YTSet<Issue>;
+		removed: YTSet<Issue>;
 	};
 
 	/** The set of work items that have been added to the issue. */
@@ -161,7 +147,7 @@ export class Issue<
 	readonly created: number;
 
 	/** The root issue in a tree of duplicates that are linked to the issue. */
-	readonly duplicateRoot: Issue<F, W>;
+	readonly duplicateRoot: Issue;
 
 	/** The set of comments that are edited in the current transaction. */
 	readonly editedComments: YTSet<IssueComment>;
@@ -232,23 +218,22 @@ export class Issue<
 	 * @param project Project that the new issue is to belong to
 	 * @param summary Issue summary
 	 */
-	constructor(reporter: User, project: Project, summary: string);
+	constructor(reporter: User, project: Project<F, W>, summary: string);
 
 	/**
 	 * Creates a new issue from a JSON specification.
 	 * @param json JSON specification of the issue
 	 */
-	constructor(json: { reporter: User; project: Project; summary: string });
+	constructor(json: { reporter: User; project: Project<F, W>; summary: string });
 
 	/**
 	 * Creates a declaration of a rule that a user can apply to one or more issues with a command or menu option.
+	 * @template R The type of the requirements.
+	 * @template T The type of the user input.
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
-	static action<
-		R extends Requirements,
-		T extends ActionUserInputType,
-	>(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
@@ -267,10 +252,7 @@ export class Issue<
 	 * @returns Newly created issue draft
 	 * @since 2025.1
 	 */
-	static createDraft<
-		F extends Record<string, IssueFieldType>,
-		W extends string,
-	>(project: Project, reporter: User): Issue<F, W>;
+	static createDraft<F extends IssueFields, W extends string>(project: Project<F, W>, reporter: User): Issue<F, W>;
 
 	/**
 	 * Creates a new shared issue draft.
@@ -278,10 +260,7 @@ export class Issue<
 	 * @returns Newly created issue draft
 	 * @since 2025.1
 	 */
-	static createSharedDraft<
-		F extends Record<string, IssueFieldType>,
-		W extends string,
-	>(project: Project): Issue<F, W>;
+	static createSharedDraft<F extends IssueFields, W extends string>(project: Project<F, W>): Issue<F, W>;
 
 	/**
 	 * Searches for Issue entities with extension properties that match the specified query.
@@ -289,22 +268,20 @@ export class Issue<
 	 * @returns The set of Issue entities that contain the specified extension properties
 	 * @since 2024.3.43260
 	 */
-	static findByExtensionProperties<
-		F extends Record<string, IssueFieldType>,
-		W extends string,
-	>(extensionPropertiesQuery: Record<string, unknown>): YTSet<Issue<F, W>>;
+	static findByExtensionProperties<F extends IssueFields, W extends string>(
+		extensionPropertiesQuery: Record<string, unknown>,
+	): YTSet<Issue<F, W>>;
 
 	/**
 	 * Finds an issue by its visible ID.
 	 * @param id The issue ID
 	 * @returns The issue that is assigned the specified ID
 	 */
-	static findById<F extends Record<string, IssueFieldType>, W extends string>(
-		id: string,
-	): Issue<F, W>;
+	static findById<F extends IssueFields, W extends string>(id: string): Issue<F, W>;
 
 	/**
 	 * Creates a declaration of a rule that is triggered when a change is applied to an issue.
+	 * @template R The type of the requirements.
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
@@ -321,6 +298,7 @@ export class Issue<
 
 	/**
 	 * Creates a declaration of a rule that is triggered on a set schedule.
+	 * @template R The type of the requirements.
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
@@ -337,6 +315,7 @@ export class Issue<
 
 	/**
 	 * Creates a declaration of a custom SLA policy. An SLA policy defines the time goals for the replies from staff and request resolution.
+	 * @template R The type of the requirements.
 	 * @param ruleProperties A JSON object that defines the properties for the SLA policy
 	 * @returns The object representation of the SLA policy
 	 */
@@ -372,7 +351,6 @@ export class Issue<
 	 * @param charset The charset of the file. Only applicable to text files
 	 * @param mimeType The MIME type of the file
 	 * @returns The attachment that is added to the issue
-	 * @since 2019.2.53994
 	 */
 	addAttachment(
 		content: InputStream | string,
@@ -385,7 +363,6 @@ export class Issue<
 	 * Attaches a file to the issue using JSON specification.
 	 * @param json JSON specification of the attachment
 	 * @returns The attachment that is added to the issue
-	 * @since 2019.2.53994
 	 */
 	addAttachment(json: {
 		content: InputStream | string;
@@ -497,7 +474,6 @@ export class Issue<
 	 * @param fieldName The name of the field to check
 	 * @param expected The expected value
 	 * @returns If the field was equal to the expected value, returns `true`
-	 * @since 2019.2.55603
 	 */
 	was<K extends keyof F>(fieldName: K, expected: F[K]): boolean;
 
@@ -522,7 +498,7 @@ export class Issue<
 	 * @param project Project to create new issue in
 	 * @returns The copy of the original issue
 	 */
-	copy(project?: Project): Issue<F, W>;
+	copy(project?: Project<F, W>): Issue<F, W>;
 
 	/**
 	 * Checks whether the specified tag is attached to an issue.
@@ -562,7 +538,6 @@ export interface IssueCommentActionContext {
 /**
  * Represents a comment that is added to an issue.
  * @extends BaseComment
- * @since 2018.1.38923
  */
 export class IssueComment extends BaseComment {
 	/** The user who created the comment. */
@@ -591,13 +566,12 @@ export class IssueComment extends BaseComment {
 
 	/**
 	 * Creates a declaration of a rule that a user can apply to an issue comment using a menu option.
+	 * @template R The type of the requirements.
+	 * @template T The type of the user input.
 	 * @param ruleProperties JSON object that defines the properties for the rule.
 	 * @returns The object representation of the rule.
 	 */
-	static action<
-		R extends Requirements,
-		T extends ActionUserInputType,
-	>(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
@@ -637,7 +611,6 @@ export class IssueComment extends BaseComment {
 	 * Attaches a file to the issue using JSON specification.
 	 * @param json JSON specification of the attachment
 	 * @returns The attachment that is added to the issue
-	 * @since 2019.2.53994
 	 */
 	addAttachment(json: {
 		content: InputStream | string;

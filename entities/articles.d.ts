@@ -3,8 +3,8 @@
  * @description Represents article entities in YouTrack
  */
 
-import type { BaseEntity, YTSet, PersistentFile, Requirements } from './core';
-import type { InputStream, ActionUserInputType, FieldFromRequirement } from '../utils';
+import type { InputStream, ActionUserInputType, Requirements, FieldFromRequirement } from '../utils';
+import type { BaseEntity, YTSet, PersistentFile } from './core';
 import type { Project } from './project';
 import type { User } from './user';
 import type { Tag } from './tag';

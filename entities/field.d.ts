@@ -3,18 +3,18 @@
  * @description Represents field and custom field entities in YouTrack
  */
 
+import type { FieldType, IssueFields } from "../utils";
 import type { BaseEntity, YTSet } from "./core";
 import type { User, UserGroup } from "./user";
-import type { FieldType } from "../utils";
 import type { Issue } from "./issue";
 
 /**
  * Class representing operations on custom fields used in issues.
  * The actual set of custom fields that are used for each issue is configured on a per-project basis.
- * @since 2018.1
+ * @template F The type of issue fields.
  */
 
-export type Fields<F> = {
+export type Fields<F extends IssueFields> = {
 	/**
 	 * Checks whether the value for a custom field is set to an expected value in the current transaction.
 	 * @param field The field to check
@@ -52,7 +52,7 @@ export type Fields<F> = {
 	 * @param field The name of the custom field (for example, 'State') or a reference to the field for which the previous value is returned
 	 * @returns If the custom field is changed in the current transaction, the previous value of the field. Otherwise, the current value of the field
 	 */
-	oldValue<K extends keyof F>(field: K): unknown;
+	oldValue<K extends keyof F>(field: K): F[K] | null;
 
 	/**
 	 * Asserts that a value is set for a custom field.
@@ -60,13 +60,13 @@ export type Fields<F> = {
 	 * @param fieldName The name of the custom field to check
 	 * @param message The message that is displayed to the user that describes the field requirement
 	 */
-	required(fieldName: string, message?: string): void;
+	required<K extends keyof F>(fieldName: K, message?: string): void;
 } & F
 
 /**
  * Represents a value that is stored in a custom field.
+ * @template T The type of the value.
  * @extends BaseEntity
- * @since 2018.1
  */
 export class Field<T extends string = string> extends BaseEntity {
 	/** Date and time field type. Used when defining rule requirements */
@@ -121,7 +121,7 @@ export class Field<T extends string = string> extends BaseEntity {
 /**
  * Represents a value in a custom field that stores a predefined set of values.
  * @extends Field
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class EnumField<T extends string = string> extends Field<T> {
 	/** Field type. Used when defining rule requirements */
@@ -140,7 +140,7 @@ export class EnumField<T extends string = string> extends Field<T> {
 /**
  * Represents a value in a custom field that has a user associated with it.
  * @extends Field
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class OwnedField<T extends string = string> extends Field {
 	/** Field type. Used when defining rule requirements */
@@ -162,7 +162,7 @@ export class OwnedField<T extends string = string> extends Field {
 /**
  * Represents a value in a custom field that stores a state type.
  * @extends Field
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class State<T extends string = string> extends Field<T> {
 	/** Field type. Used when defining rule requirements */
@@ -184,7 +184,7 @@ export class State<T extends string = string> extends Field<T> {
 /**
  * Represents a value in a custom field that stores a version type.
  * @extends Field
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class ProjectVersion<T extends string = string> extends Field<T> {
 	/** Field type. Used when defining rule requirements */
@@ -212,7 +212,7 @@ export class ProjectVersion<T extends string = string> extends Field<T> {
 /**
  * Represents a value that is stored in a custom field that stores a build type.
  * @extends Field
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class Build<T extends string = string> extends Field<T> {
 	/** Field type. Used when defining rule requirements */
@@ -233,8 +233,6 @@ export class Build<T extends string = string> extends Field<T> {
 
 /**
  * Represents a custom field that is available in a project.
- * @extends BaseEntity
- * @since 2018.1
  */
 export class ProjectCustomField extends BaseEntity {
 	/** The localized name of the field */
@@ -250,14 +248,6 @@ export class ProjectCustomField extends BaseEntity {
 	readonly typeName: string;
 
 	/**
-	 * Checks whether a field is set to an expected value in the current transaction.
-	 * @param fieldName The name of the field to check
-	 * @param expected The expected value
-	 * @returns If the field is set to the expected value, returns true
-	 */
-	becomes(fieldName: string, expected: string): boolean;
-
-	/**
 	 * Checks if the changes that are applied in the current transaction remove the condition to show the custom field.
 	 * @param issue The issue for which the condition for showing the field is checked
 	 * @returns When true, the condition for showing the field is removed in the current transaction
@@ -270,22 +260,6 @@ export class ProjectCustomField extends BaseEntity {
 	 * @returns When true, the condition for showing the field is met in the current transaction
 	 */
 	becomesVisibleInIssue(issue: Issue): boolean;
-
-	/**
-	 * Checks whether a user has permission to read the field.
-	 * @param fieldName The name of the field
-	 * @param user The user for whom the permission to read the field is checked
-	 * @returns If the user can read the field, returns true
-	 */
-	canBeReadBy(fieldName: string, user: User): boolean;
-
-	/**
-	 * Checks whether a user has permission to update the field.
-	 * @param fieldName The name of the field
-	 * @param user The user for whom the permission to update the field is checked
-	 * @returns If the user can update the field, returns true
-	 */
-	canBeWrittenBy(fieldName: string, user: User): boolean;
 
 	/**
 	 * Returns the background color that is used for this field value in the specified issue.
@@ -309,56 +283,17 @@ export class ProjectCustomField extends BaseEntity {
 	getValuePresentation(issue: Issue): string;
 
 	/**
-	 * Checks whether a field is equal to an expected value.
-	 * @param fieldName The name of the field to check
-	 * @param expected The expected value
-	 * @returns If the field is equal to the expected value, returns true
-	 */
-	is(fieldName: string, expected: string): boolean;
-
-	/**
-	 * Checks whether the value of a field is changed in the current transaction.
-	 * @param fieldName The name of the field to check
-	 * @returns If the value of the field is changed in the current transaction, returns true
-	 */
-	isChanged(fieldName: string): boolean;
-
-	/**
 	 * Checks if a field is visible in the issue.
 	 * @param issue The issue for which the condition for showing the field is checked
 	 * @returns When true, the condition for showing the custom field in the issue has been met
 	 */
 	isVisibleInIssue(issue: Issue): boolean;
-
-	/**
-	 * Returns the previous value of a single-value field before an update was applied.
-	 * @param fieldName The name of the field
-	 * @returns If the field is changed in the current transaction, the previous value of the field. Otherwise, null
-	 */
-	oldValue(
-		fieldName: string,
-	): string | number | boolean | BaseEntity | User | Date | null;
-
-	/**
-	 * Asserts that a value is set for a field.
-	 * @param fieldName The name of the field to check
-	 * @param message The message that is displayed to the user that describes the field requirement
-	 */
-	required(fieldName: string, message?: string): void;
-
-	/**
-	 * Checks whether a field was equal to an expected value prior to the current transaction.
-	 * @param fieldName The name of the field to check
-	 * @param expected The expected value
-	 * @returns If the field was equal to the expected value, returns true
-	 */
-	was(fieldName: string, expected: string): boolean;
 }
 
 /**
  * Base class for custom fields that store simple values like strings and numbers.
  * @extends ProjectCustomField
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class SimpleProjectCustomField extends ProjectCustomField {
 	/**
@@ -374,7 +309,7 @@ export class SimpleProjectCustomField extends ProjectCustomField {
 /**
  * Represents a custom field in a project that stores values as a user type.
  * @extends ProjectCustomField
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class UserProjectCustomField extends ProjectCustomField {
 	/** The default value for the custom field */
@@ -388,7 +323,7 @@ export class UserProjectCustomField extends ProjectCustomField {
  * Represents a custom field that stores a string of characters as text.
  * When displayed in an issue, the text is shown as formatted in Markdown.
  * @extends SimpleProjectCustomField
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class TextProjectCustomField extends SimpleProjectCustomField {
 	/**
@@ -405,7 +340,7 @@ export class TextProjectCustomField extends SimpleProjectCustomField {
  * Represents a custom field in a project that stores a value as a period type.
  * Uses org.joda.time.Period as a base class for period values.
  * @extends SimpleProjectCustomField
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class PeriodProjectCustomField extends SimpleProjectCustomField {
 	/**
@@ -421,7 +356,7 @@ export class PeriodProjectCustomField extends SimpleProjectCustomField {
 /**
  * Represents a custom field in a project that stores a UserGroup type.
  * @extends ProjectCustomField
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class GroupProjectCustomField extends ProjectCustomField {
 	/** The list of available values for the custom field */
@@ -447,7 +382,7 @@ export class GroupProjectCustomField extends ProjectCustomField {
 /**
  * Represents a custom field in a project that stores a predefined set of values.
  * @extends ProjectCustomField
- * @since 2018.1
+ * @template T The type of the value.
  */
 export class BundleProjectCustomField extends ProjectCustomField {
 	/** The values that are used as the default for this field */

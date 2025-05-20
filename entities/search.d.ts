@@ -86,20 +86,6 @@ export class SavedQuery extends WatchFolder {
   static findQueryByName(name: string): SavedQuery;
 
   /**
-   * Checks whether the value of a field is changed in the current transaction.
-   * @param fieldName The name of the field to check
-   * @returns If the value of the field is changed in the current transaction, returns `true`
-   */
-  isChanged(fieldName: string): boolean;
-
-  /**
-   * Returns the previous value of a single-value field before an update was applied.
-   * @param fieldName The name of the field
-   * @returns If the field is changed in the current transaction, the previous value of the field. Otherwise, null
-   */
-  oldValue(fieldName: string): string | number | boolean | Date | User | BaseEntity | null;
-
-  /**
    * Asserts that a value is set for a field. If a value for the required field is not set, the specified message is displayed in the user interface.
    * @param fieldName The name of the field to check
    * @param message The message that is displayed to the user that describes the field requirement

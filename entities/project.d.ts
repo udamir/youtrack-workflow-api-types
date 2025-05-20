@@ -8,6 +8,7 @@ import type { ProjectCustomField } from "./field";
 import type { BaseEntity, YTSet } from "./core";
 import type { ChangesProcessor } from "./vcs";
 import type { User, UserGroup } from "./user";
+import type { IssueFields } from "../utils";
 import type { Article } from "./articles";
 import type { Issue } from "./issue";
 
@@ -21,18 +22,18 @@ export enum ProjectType {
 
 /**
  * Represents a YouTrack project.
- * @since 2025-04-03
+ * @template F The type of issue fields.
+ * @template W The type of work item types.
  */
-export class Project extends BaseEntity {
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export class Project<F extends IssueFields = any, W extends string = string> extends BaseEntity {
 	/**
 	 * A list of all articles that belong to the project.
-	 * @since 2021.4.23500
 	 */
 	readonly articles: YTSet<Article>;
 
 	/**
 	 * The list of VCS change processors that are integrated with the project.
-	 * @since 2020.3
 	 */
 	readonly changesProcessors: YTSet<ChangesProcessor>;
 
@@ -54,7 +55,7 @@ export class Project extends BaseEntity {
 	/**
 	 * A list of all issues that belong to the project.
 	 */
-	readonly issues: YTSet<Issue>;
+	readonly issues: YTSet<Issue<F, W>>;
 
 	/**
 	 * The ID of the project. Use instead of project.shortName, which is deprecated.
@@ -91,13 +92,11 @@ export class Project extends BaseEntity {
 
 	/**
 	 * A UserGroup object that contains the users and members of groups who are assigned to the project team.
-	 * @since 2017.4.38235
 	 */
 	readonly team: UserGroup;
 
 	/**
 	 * Work item attributes configured for the project.
-	 * @since 2024.2
 	 */
 	readonly workItemAttributes: YTSet<WorkItemProjectAttribute>;
 
@@ -115,23 +114,27 @@ export class Project extends BaseEntity {
 	 * }
 	 * ```
 	 */
-	static findByExtensionProperties(
+	static findByExtensionProperties<F extends IssueFields, W extends string = string>(
 		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<Project>;
+	): YTSet<Project<F, W>>;
 
 	/**
 	 * Finds a project by ID.
+	 * @template F The type of issue fields.
+	 * @template W The type of work item types.
 	 * @param key The ID of the project to search for.
 	 * @returns The project, or null when there are no projects with the specified ID.
 	 */
-	static findByKey(key: string): Project | null;
+	static findByKey<F extends IssueFields, W extends string = string>(key: string): Project<F, W> | null;
 
 	/**
 	 * Finds a project by name.
+	 * @template F The type of issue fields.
+	 * @template W The type of work item types.
 	 * @param name The name of the project to search for.
 	 * @returns The project, or null when there are no projects with the specified name.
 	 */
-	static findByName(name: string): Project | null;
+	static findByName<F extends IssueFields, W extends string = string>(name: string): Project<F, W> | null;
 
 	/**
 	 * Returns the custom field in the project with the specified name.
@@ -144,7 +147,6 @@ export class Project extends BaseEntity {
 	 * Returns work item attribute with the given name or null if it does not exist.
 	 * @param name Name of the attribute to find by
 	 * @returns Work item attribute with the given name or null if it does not exist.
-	 * @since 2024.2
 	 */
 	findWorkItemAttributeByName(name: string): WorkItemProjectAttribute | null;
 
@@ -162,7 +164,6 @@ export class Project extends BaseEntity {
 	 * Checks if the specified user is an agent in the project.
 	 * @param user The user to check.
 	 * @returns If the specified user is added to agents in the project, returns 'true'.
-	 * @since 2023.1
 	 */
 	isAgent(user: User): boolean;
 
@@ -170,7 +171,6 @@ export class Project extends BaseEntity {
 	 * Creates a new issue draft.
 	 * @param reporter Issue draft reporter.
 	 * @returns Newly created issue draft.
-	 * @since 2021.4
 	 */
-	newDraft(reporter: User): Issue;
+	newDraft(reporter: User): Issue<F, W>;
 }

@@ -11,9 +11,8 @@ import type {
 	TextProjectCustomField,
 	UserProjectCustomField,
 } from "./entities/field";
-import type { Requirement, Requirements } from "./entities";
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
-import type { Issue, User, Tag, UserGroup, Project, Set } from "./entities";
+import type { Issue, IssueLinkPrototype, User, Tag, UserGroup, Project, Set, SavedQuery } from "./entities";
 import type { Period } from "./date-time"
 
 export enum FieldType {
@@ -31,6 +30,136 @@ export enum FieldType {
 	userFieldType = "userFieldType",
   ownedFieldType = "ownedFieldType",
 }
+
+export type IssueSingleFieldType<T extends string> = string | number | User | State<T> | EnumField<T> | Build<T> | ProjectVersion<T> | Period;
+export type IssueMultiFieldType<T extends string> = Set<IssueSingleFieldType<T>>;
+export type IssueFieldType<T extends string = string> = IssueSingleFieldType<T> | IssueMultiFieldType<T> | null;
+
+export type IssueFields = Record<string, IssueFieldType>
+
+
+interface BaseRequirement<T> {
+	type: T;
+	/**
+	 * The optional name of the field or entity. If not provided, the key (alias) for this requirement in the Requirements object is used.
+	 */
+	name?: string;
+}
+
+interface IssueLinkPrototypeRequirement
+	extends BaseRequirement<typeof IssueLinkPrototype> {
+	/**
+	 * The inward name of the issue link type (equals outward name if not set).
+	 */
+	inward?: string;
+
+	/**
+	 * The outward name of the issue link type (required for IssueLinkPrototype requirements).
+	 */
+	outward: string;
+}
+
+interface IssueRequirement extends BaseRequirement<typeof Issue> {
+	/**
+	 * An optional issue ID, used instead of name for Issue requirements.
+	 */
+	id?: string;
+}
+
+interface TagRequirement extends BaseRequirement<typeof Tag> {}
+
+interface SavedQueryRequirement extends BaseRequirement<typeof SavedQuery> {}
+
+interface UserRequirement extends BaseRequirement<typeof User> {
+	/**
+	 * An optional login, used instead of name for User requirements.
+	 */
+	login?: string;
+}
+
+interface UserGroupRequirement extends BaseRequirement<typeof UserGroup> {
+	/**
+	 * An optional login, used instead of name for UserGroup requirements.
+	 */
+	login?: string;
+}
+
+export type RequirementType =
+	| typeof User
+	| typeof UserGroup
+	| typeof Project
+	| typeof Issue
+	| typeof Tag
+	| typeof SavedQuery
+	| typeof IssueLinkPrototype
+	| FieldType.userFieldType
+	| FieldType.enumFieldType
+	| FieldType.dateType
+	| FieldType.dateTimeType
+	| FieldType.integerType
+	| FieldType.floatType
+	| FieldType.stringType
+	| FieldType.textType
+	| FieldType.periodType
+	| FieldType.versionFieldType
+	| FieldType.stateFieldType
+	| FieldType.buildFieldType
+	| FieldType.ownedFieldType
+
+/**
+ * A single element in a set of Requirements.
+ */
+export interface Requirement {
+	/**
+	 * An optional issue ID, used instead of name for Issue requirements.
+	 */
+	id?: string;
+
+	/**
+	 * The inward name of the issue link type (equals outward name if not set).
+	 */
+	inward?: string;
+
+	/**
+	 * An optional login, used instead of name for User requirements.
+	 */
+	login?: string;
+
+	/**
+	 * An optional flag, `false` by default. If `true`, a required field must store multiple values (if applicable).
+	 */
+	multi?: boolean;
+
+	/**
+	 * The optional name of the field or entity. If not provided, the key (alias) for this requirement in the Requirements object is used.
+	 */
+	name?: string;
+
+	/**
+	 * The outward name of the issue link type (required for IssueLinkPrototype requirements).
+	 */
+	outward?: string;
+
+	/**
+	 * The data type of the entity.
+	 * Can be one of the custom field types or system-wide entities.
+	 */
+	type: RequirementType;
+
+
+	[key: string]: string | boolean | object | undefined;
+}
+
+/**
+ * A set of entities that must be present for the script to work as expected.
+ */
+export interface Requirements {
+	/**
+	 * Collection of requirements, where each key is an alias for the requirement.
+	 */
+	[key: string]: Requirement;
+}
+
 
 /**
  * Available types for user input in action rules
@@ -135,9 +264,6 @@ export type FieldFromRequirement<T extends ActionUserInputType> = T extends
 											: T extends UserGroup ? UserGroup
 												: never;
 
-type IssueSingleFieldType<T extends string> = string | number | User | State<T> | EnumField<T> | Build<T> | ProjectVersion<T> | Period;
-type IssueMultiFieldType<T extends string> = Set<IssueSingleFieldType<T>>;
-type IssueFieldType<T extends string = string> = IssueSingleFieldType<T> | IssueMultiFieldType<T>;
 
 /**
  * Base context interface for rule functions

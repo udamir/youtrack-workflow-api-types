@@ -1,9 +1,6 @@
-import type { User, UserGroup } from "./user";
-import type { SavedQuery } from "./search";
-import type { FieldType } from "../utils";
 import type { Project } from "./project";
 import type { Issue } from "./issue";
-import type { Tag } from "./tag";
+import type { User } from "./user";
 
 /**
  * Base entity class that all YouTrack entities extend.
@@ -83,12 +80,10 @@ export class BaseEntity {
 
 /**
  * Represents the common ancestor for all persistent files that are available in YouTrack.
- * @since 2017.4.37915
  */
 export class PersistentFile extends BaseEntity {
 	/**
 	 * The charset type of the file. Only applicable to text files.
-	 * @since 2019.2.53994
 	 */
 	readonly charset: string;
 
@@ -99,7 +94,6 @@ export class PersistentFile extends BaseEntity {
 
 	/**
 	 * The MIME type of the file.
-	 * @since 2019.2.53994
 	 */
 	readonly mimeType: string;
 
@@ -118,7 +112,6 @@ export class PersistentFile extends BaseEntity {
 	 * @param extensionPropertiesQuery The extension properties query, defined as a set of key-value pairs
 	 * representing properties and their corresponding values.
 	 * @returns The set of PersistentFile entities that contain the specified extension properties.
-	 * @since 2024.3.43260
 	 * @example
 	 * ```
 	 * {
@@ -136,6 +129,7 @@ export class PersistentFile extends BaseEntity {
  * Custom implementation of Set to handle YouTrack entity collections
  * The Set is used as storage for all multi-value objects: custom fields that store multiple values,
  * issue links, issues in a project, and so on.
+ * @template T The type of the elements in the set.
  */
 export class YTSet<T> {
 	/** The number of elements in the Set */
@@ -249,130 +243,8 @@ export class YTSet<T> {
 	toArray(): T[];
 }
 
-interface BaseRequirement<T> {
-	type: T;
-	/**
-	 * The optional name of the field or entity. If not provided, the key (alias) for this requirement in the Requirements object is used.
-	 */
-	name?: string;
-}
-
-interface IssueLinkPrototypeRequirement
-	extends BaseRequirement<typeof IssueLinkPrototype> {
-	/**
-	 * The inward name of the issue link type (equals outward name if not set).
-	 */
-	inward?: string;
-
-	/**
-	 * The outward name of the issue link type (required for IssueLinkPrototype requirements).
-	 */
-	outward: string;
-}
-
-interface IssueRequirement extends BaseRequirement<typeof Issue> {
-	/**
-	 * An optional issue ID, used instead of name for Issue requirements.
-	 */
-	id?: string;
-}
-
-interface TagRequirement extends BaseRequirement<typeof Tag> {}
-
-interface SavedQueryRequirement extends BaseRequirement<typeof SavedQuery> {}
-
-interface UserRequirement extends BaseRequirement<typeof User> {
-	/**
-	 * An optional login, used instead of name for User requirements.
-	 */
-	login?: string;
-}
-
-interface UserGroupRequirement extends BaseRequirement<typeof UserGroup> {
-	/**
-	 * An optional login, used instead of name for UserGroup requirements.
-	 */
-	login?: string;
-}
-
-/**
- * A single element in a set of Requirements.
- * @since 2025.3.21
- */
-export interface Requirement {
-	/**
-	 * An optional issue ID, used instead of name for Issue requirements.
-	 */
-	id?: string;
-
-	/**
-	 * The inward name of the issue link type (equals outward name if not set).
-	 */
-	inward?: string;
-
-	/**
-	 * An optional login, used instead of name for User requirements.
-	 */
-	login?: string;
-
-	/**
-	 * An optional flag, `false` by default. If `true`, a required field must store multiple values (if applicable).
-	 */
-	multi?: boolean;
-
-	/**
-	 * The optional name of the field or entity. If not provided, the key (alias) for this requirement in the Requirements object is used.
-	 */
-	name?: string;
-
-	/**
-	 * The outward name of the issue link type (required for IssueLinkPrototype requirements).
-	 */
-	outward?: string;
-
-	/**
-	 * The data type of the entity.
-	 * Can be one of the custom field types or system-wide entities.
-	 */
-	type:
-		| typeof User
-		| typeof UserGroup
-		| typeof Project
-		| typeof Issue
-		| typeof Tag
-		| typeof SavedQuery
-		| typeof IssueLinkPrototype
-		| FieldType.userFieldType
-		| FieldType.enumFieldType
-		| FieldType.dateType
-		| FieldType.dateTimeType
-		| FieldType.integerType
-		| FieldType.floatType
-		| FieldType.stringType
-		| FieldType.textType
-		| FieldType.periodType
-		| FieldType.versionFieldType
-		| FieldType.stateFieldType
-		| FieldType.buildFieldType
-		| FieldType.ownedFieldType
-
-	[key: string]: string | boolean | object | undefined;
-}
-
-/**
- * A set of entities that must be present for the script to work as expected.
- * @since 2025.3.21
- */
-export interface Requirements {
-	/**
-	 * Collection of requirements, where each key is an alias for the requirement.
-	 */
-	[key: string]: Requirement;
-}
-
 /**
  * An object that enables traversal through the elements in a collection.
- * @since 2025-03-21
  */
 export interface Iterator<T> {
 	/**
@@ -394,8 +266,6 @@ export interface Iterator<T> {
 
 /**
  * Represents a Gantt chart.
- * @extends BaseEntity
- * @since 2022.1
  */
 export class Gantt extends BaseEntity {
 	/** The name of the Gantt chart */
@@ -442,8 +312,6 @@ export class Gantt extends BaseEntity {
 
 /**
  * Represents an issue link type.
- * @extends BaseEntity
- * @since 2018.1
  */
 export class IssueLinkPrototype extends BaseEntity {
 	/** The inward name of the issue link type */
@@ -471,8 +339,6 @@ export class IssueLinkPrototype extends BaseEntity {
 
 /**
  * Entity type for App global extension properties
- * @extends BaseEntity
- * @since 2019.1
  */
 export class AppGlobalStorage extends BaseEntity {
 	/**

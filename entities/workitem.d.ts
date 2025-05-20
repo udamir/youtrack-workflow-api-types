@@ -4,13 +4,13 @@
  */
 
 import type { BaseEntity, YTSet } from './core';
+import type { IssueFields } from '../utils';
 import type { Project } from './project';
 import type { User } from './user';
 
 /**
  * Represents a work type that can be assigned to a work item.
- * @extends BaseEntity
- * @since 2018.1.38923
+ * @template T The type of the work item.
  */
 export class WorkItemType<T extends string> extends BaseEntity {
   /** The name of the work item type. */
@@ -25,15 +25,16 @@ export class WorkItemType<T extends string> extends BaseEntity {
   
   /**
    * Returns the set of work item types that are available in a project.
+   * @template F The type of issue fields.
+   * @template W The type of the work item.
    * @param project The project for which work item types are returned.
    * @returns The set of available work item types for the specified project.
    */
-  static findByProject<T extends string>(project: Project): YTSet<WorkItemType<T>>;
+  static findByProject<F extends IssueFields, W extends string>(project: Project<F, W>): YTSet<WorkItemType<W>>;
 }
 
 /**
  * Interface representing custom work item attributes.
- * @since 2024.2
  */
 export interface WorkItemAttributes {
   [key: string]: string | number | boolean | null;
@@ -41,8 +42,6 @@ export interface WorkItemAttributes {
 
 /**
  * Value of a work item attribute.
- * @extends BaseEntity
- * @since 2022.2
  */
 export class WorkItemAttributeValue extends BaseEntity {
   /** Name of the attribute value */
@@ -58,8 +57,6 @@ export class WorkItemAttributeValue extends BaseEntity {
 
 /**
  * Work item attribute configured for the project.
- * @extends BaseEntity
- * @since 2024.2
  */
 export class WorkItemProjectAttribute extends BaseEntity {
   /** Name of the attribute. */
@@ -85,8 +82,7 @@ export class WorkItemProjectAttribute extends BaseEntity {
 
 /**
  * The base class for issue work items.
- * @extends BaseEntity
- * @since 2018.1.38923
+ * @template T The type of the work item.
  */
 export class BaseWorkItem<T extends string> extends BaseEntity {
   /** The user to whom the work is attributed in the work item. */
@@ -110,8 +106,7 @@ export class BaseWorkItem<T extends string> extends BaseEntity {
 
 /**
  * Represents a work item that has been added to an issue.
- * @extends BaseWorkItem
- * @since 2018.2.42312
+ * @template T The type of the work item.
  */
 export class IssueWorkItem<T extends string> extends BaseWorkItem<T> {
   /** Custom work item attributes. */
