@@ -97,9 +97,8 @@ export class IssueAttachment extends PersistentFile {
  * @template F The type of the issue fields.
  * @template W The type of the workflow.
  */
-
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export  class Issue<F extends IssueFields = any, W extends string = string> extends BaseEntity {
+export class Issue<F extends IssueFields = any, W extends string = any> extends BaseEntity {
 	/** The text that is entered as the issue summary. */
 	summary: string;
 
