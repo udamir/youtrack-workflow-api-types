@@ -18,4 +18,4 @@ import type { WatchFolder } from './entities/search';
  *             If the value for this parameter is not provided, the search query is executed on behalf of the current user.
  * @returns The set of issues found by the search.
  */
-export function search(folder: WatchFolder, query: string | object, user?: User): YTSet<Issue>;
+export function search(folder: WatchFolder | null, query: string | object, user?: User): YTSet<Issue>;
