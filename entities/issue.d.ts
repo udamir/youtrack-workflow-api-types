@@ -67,18 +67,22 @@ export class IssueAttachment extends PersistentFile {
 
 	/**
 	 * Creates a declaration of a rule that a user can apply to an issue attachment using a menu option.
+	 * @template R The type of the requirements.
+	 * @template T The type of the user input.
+	 * @template F The type of the issue fields.
+	 * @template W The type of the workflow.
 	 * @param ruleProperties JSON object that defines the properties for the rule.
 	 * @returns The object representation of the rule.
 	 */
-	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType, F extends IssueFields, W extends string>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
 			type: T;
 			description?: string;
 		} | null;
-		guard?: (ctx: ActionContext<R, T>) => boolean;
-		action: (ctx: ActionContext<R, T>) => void;
+		guard?: (ctx: ActionContext<R, T, F, W>) => boolean;
+		action: (ctx: ActionContext<R, T, F, W>) => void;
 		requirements?: R;
 	}): object;
 
@@ -97,8 +101,7 @@ export class IssueAttachment extends PersistentFile {
  * @template F The type of the issue fields.
  * @template W The type of the workflow.
  */
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export class Issue<F extends IssueFields = any, W extends string = any> extends BaseEntity {
+export  class Issue<F extends IssueFields = any, W extends string = any> extends BaseEntity {
 	/** The text that is entered as the issue summary. */
 	summary: string;
 
@@ -229,18 +232,20 @@ export class Issue<F extends IssueFields = any, W extends string = any> extends 
 	 * Creates a declaration of a rule that a user can apply to one or more issues with a command or menu option.
 	 * @template R The type of the requirements.
 	 * @template T The type of the user input.
+	 * @template F The type of the issue fields.
+	 * @template W The type of the workflow.
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
-	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType, F extends IssueFields, W extends string>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
 			type: T;
 			description?: string;
 		} | null;
-		guard?: (ctx: ActionContext<R, T>) => boolean;
-		action: (ctx: ActionContext<R, T>) => void;
+		guard?: (ctx: ActionContext<R, T, F, W>) => boolean;
+		action: (ctx: ActionContext<R, T, F, W>) => void;
 		requirements?: R;
 	}): object;
 
@@ -281,13 +286,15 @@ export class Issue<F extends IssueFields = any, W extends string = any> extends 
 	/**
 	 * Creates a declaration of a rule that is triggered when a change is applied to an issue.
 	 * @template R The type of the requirements.
+	 * @template F The type of the issue fields.
+	 * @template W The type of the workflow.
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
-	static onChange<R extends Requirements>(ruleProperties: {
+	static onChange<R extends Requirements, F extends IssueFields, W extends string>(ruleProperties: {
 		title: string;
-		guard?: (ctx: RuleContext<R>) => boolean;
-		action: (ctx: RuleContext<R>) => void;
+		guard?: (ctx: RuleContext<R, F, W>) => boolean;
+		action: (ctx: RuleContext<R, F, W>) => void;
 		requirements?: R;
 		runOn?: {
 			change?: boolean;
@@ -298,32 +305,36 @@ export class Issue<F extends IssueFields = any, W extends string = any> extends 
 	/**
 	 * Creates a declaration of a rule that is triggered on a set schedule.
 	 * @template R The type of the requirements.
+	 * @template F The type of the issue fields.
+	 * @template W The type of the workflow.
 	 * @param ruleProperties A JSON object that defines the properties for the rule
 	 * @returns The object representation of the rule
 	 */
-	static onSchedule<R extends Requirements>(ruleProperties: {
+	static onSchedule<R extends Requirements, F extends IssueFields, W extends string>(ruleProperties: {
 		title: string;
 		search: string | (() => string);
 		cron: string;
 		muteUpdateNotifications?: boolean;
 		modifyUpdatedProperties?: boolean;
-		guard?: (ctx: RuleContext<R>) => boolean;
-		action: (ctx: RuleContext<R>) => void;
+		guard?: (ctx: RuleContext<R, F, W>) => boolean;
+		action: (ctx: RuleContext<R, F, W>) => void;
 		requirements?: R;
 	}): object;
 
 	/**
 	 * Creates a declaration of a custom SLA policy. An SLA policy defines the time goals for the replies from staff and request resolution.
 	 * @template R The type of the requirements.
+	 * @template F The type of the issue fields.
+	 * @template W The type of the workflow.
 	 * @param ruleProperties A JSON object that defines the properties for the SLA policy
 	 * @returns The object representation of the SLA policy
 	 */
-	static sla<R extends Requirements>(ruleProperties: {
+	static sla<R extends Requirements, F extends IssueFields, W extends string>(ruleProperties: {
 		title: string;
-		guard?: (ctx: RuleContext<R>) => boolean;
-		onEnter?: (ctx: RuleContext<R>) => void;
-		action?: (ctx: RuleContext<R>) => void;
-		onBreach?: (ctx: RuleContext<R>) => void;
+		guard?: (ctx: RuleContext<R, F, W>) => boolean;
+		onEnter?: (ctx: RuleContext<R, F, W>) => void;
+		action?: (ctx: RuleContext<R, F, W>) => void;
+		onBreach?: (ctx: RuleContext<R, F, W>) => void;
 		requirements?: R;
 	}): object;
 
@@ -567,18 +578,20 @@ export class IssueComment extends BaseComment {
 	 * Creates a declaration of a rule that a user can apply to an issue comment using a menu option.
 	 * @template R The type of the requirements.
 	 * @template T The type of the user input.
+	 * @template F The type of the issue fields.
+	 * @template W The type of the workflow.
 	 * @param ruleProperties JSON object that defines the properties for the rule.
 	 * @returns The object representation of the rule.
 	 */
-	static action<R extends Requirements, T extends ActionUserInputType>(ruleProperties: {
+	static action<R extends Requirements, T extends ActionUserInputType, F extends IssueFields, W extends string>(ruleProperties: {
 		title: string;
 		command: string;
 		userInput?: {
 			type: T;
 			description?: string;
 		} | null;
-		guard?: (ctx: ActionContext<R, T> & IssueCommentActionContext) => boolean;
-		action: (ctx: ActionContext<R, T> & IssueCommentActionContext) => void;
+		guard?: (ctx: ActionContext<R, T, F, W> & IssueCommentActionContext) => boolean;
+		action: (ctx: ActionContext<R, T, F, W> & IssueCommentActionContext) => void;
 		requirements?: R;
 	}): object;
 
