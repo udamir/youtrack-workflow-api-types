@@ -100,8 +100,9 @@ export class IssueAttachment extends PersistentFile {
  * Represents an issue in YouTrack.
  * @template F The type of the issue fields.
  * @template W The type of the workflow.
+ * @template L The type of the issue link types.
  */
-export  class Issue<F extends IssueFields = any, W extends string = any> extends BaseEntity {
+export class Issue<F extends IssueFields = IssueFields, W extends string = string, L extends string = string> extends BaseEntity {
 	/** The text that is entered as the issue summary. */
 	summary: string;
 
@@ -125,10 +126,9 @@ export  class Issue<F extends IssueFields = any, W extends string = any> extends
 
 	/** Issue links (e.g. `relates to`, `parent for`, etc.). Each link is a Set of Issue objects. */
 	readonly links: {
-		[key: string]: YTSet<Issue>;
 		added: YTSet<Issue>;
 		removed: YTSet<Issue>;
-	};
+	} & Record<L, YTSet<Issue>>;
 
 	/** The set of work items that have been added to the issue. */
 	readonly workItems: YTSet<IssueWorkItem<W>>;
@@ -256,7 +256,7 @@ export  class Issue<F extends IssueFields = any, W extends string = any> extends
 	 * @returns Newly created issue draft
 	 * @since 2025.1
 	 */
-	static createDraft<F extends IssueFields, W extends string>(project: Project<F, W>, reporter: User): Issue<F, W>;
+	static createDraft<F extends IssueFields, W extends string, L extends string>(project: Project<F, W>, reporter: User): Issue<F, W, L>;
 
 	/**
 	 * Creates a new shared issue draft.
@@ -264,7 +264,7 @@ export  class Issue<F extends IssueFields = any, W extends string = any> extends
 	 * @returns Newly created issue draft
 	 * @since 2025.1
 	 */
-	static createSharedDraft<F extends IssueFields, W extends string>(project: Project<F, W>): Issue<F, W>;
+	static createSharedDraft<F extends IssueFields, W extends string, L extends string>(project: Project<F, W>): Issue<F, W, L>;
 
 	/**
 	 * Searches for Issue entities with extension properties that match the specified query.
@@ -272,16 +272,16 @@ export  class Issue<F extends IssueFields = any, W extends string = any> extends
 	 * @returns The set of Issue entities that contain the specified extension properties
 	 * @since 2024.3.43260
 	 */
-	static findByExtensionProperties<F extends IssueFields, W extends string>(
+	static findByExtensionProperties<F extends IssueFields, W extends string, L extends string>(
 		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<Issue<F, W>>;
+	): YTSet<Issue<F, W, L>>;
 
 	/**
 	 * Finds an issue by its visible ID.
 	 * @param id The issue ID
 	 * @returns The issue that is assigned the specified ID
 	 */
-	static findById<F extends IssueFields, W extends string>(id: string): Issue<F, W>;
+	static findById<F extends IssueFields, W extends string, L extends string>(id: string): Issue<F, W, L>;
 
 	/**
 	 * Creates a declaration of a rule that is triggered when a change is applied to an issue.
@@ -508,7 +508,7 @@ export  class Issue<F extends IssueFields = any, W extends string = any> extends
 	 * @param project Project to create new issue in
 	 * @returns The copy of the original issue
 	 */
-	copy(project?: Project<F, W>): Issue<F, W>;
+	copy(project?: Project<F, W, L>): Issue<F, W, L>;
 
 	/**
 	 * Checks whether the specified tag is attached to an issue.

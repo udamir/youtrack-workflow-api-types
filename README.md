@@ -21,7 +21,7 @@ Add `paths` to your project's `tsconfig.json` with following content:
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "target": "es2020",
+    "target": "es2021",
     "module": "commonjs",
     "baseUrl": ".",
     "paths": {

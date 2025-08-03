@@ -24,9 +24,10 @@ export enum ProjectType {
  * Represents a YouTrack project.
  * @template F The type of issue fields.
  * @template W The type of work item types.
+ * @template L The type of issue link types.
  */
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export class Project<F extends IssueFields = any, W extends string = string> extends BaseEntity {
+export class Project<F extends IssueFields = any, W extends string = string, L extends string = string> extends BaseEntity {
 	/**
 	 * A list of all articles that belong to the project.
 	 */
@@ -55,7 +56,7 @@ export class Project<F extends IssueFields = any, W extends string = string> ext
 	/**
 	 * A list of all issues that belong to the project.
 	 */
-	readonly issues: YTSet<Issue<F, W>>;
+	readonly issues: YTSet<Issue<F, W, L>>;
 
 	/**
 	 * The ID of the project. Use instead of project.shortName, which is deprecated.
@@ -125,7 +126,7 @@ export class Project<F extends IssueFields = any, W extends string = string> ext
 	 * @param key The ID of the project to search for.
 	 * @returns The project, or null when there are no projects with the specified ID.
 	 */
-	static findByKey<F extends IssueFields, W extends string = string>(key: string): Project<F, W> | null;
+	static findByKey<F extends IssueFields, W extends string = string, L extends string = string>(key: string): Project<F, W, L> | null;
 
 	/**
 	 * Finds a project by name.
@@ -134,7 +135,7 @@ export class Project<F extends IssueFields = any, W extends string = string> ext
 	 * @param name The name of the project to search for.
 	 * @returns The project, or null when there are no projects with the specified name.
 	 */
-	static findByName<F extends IssueFields, W extends string = string>(name: string): Project<F, W> | null;
+	static findByName<F extends IssueFields, W extends string = string, L extends string = string>(name: string): Project<F, W, L> | null;
 
 	/**
 	 * Returns the custom field in the project with the specified name.
@@ -172,5 +173,5 @@ export class Project<F extends IssueFields = any, W extends string = string> ext
 	 * @param reporter Issue draft reporter.
 	 * @returns Newly created issue draft.
 	 */
-	newDraft(reporter: User): Issue<F, W>;
+	newDraft(reporter: User): Issue<F, W, L>;
 }
