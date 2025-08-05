@@ -126,9 +126,8 @@ export class Issue<F extends IssueFields = IssueFields, W extends string = strin
 
 	/** Issue links (e.g. `relates to`, `parent for`, etc.). Each link is a Set of Issue objects. */
 	readonly links: {
-		added: YTSet<Issue>;
-		removed: YTSet<Issue>;
-	} & Record<L, YTSet<Issue>>;
+		[K in L]: K extends L ? YTSet<Issue<F, W, L>> : never;
+	};
 
 	/** The set of work items that have been added to the issue. */
 	readonly workItems: YTSet<IssueWorkItem<W>>;
