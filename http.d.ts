@@ -44,7 +44,7 @@ export class Response {
    * The response body.
    * If an exception occurs during processing, the response body is empty (null).
    */
-  response: string;
+  body: string;
 
   /**
    * A byte stream representation of the response body.
