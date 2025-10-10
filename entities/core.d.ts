@@ -340,36 +340,4 @@ export class IssueLinkPrototype extends BaseEntity {
 /**
  * Entity type for App global extension properties
  */
-export class AppGlobalStorage extends BaseEntity {
-	/**
-	 * Gets the value of a property with the specified name.
-	 * @param propertyName The name of the property
-	 * @returns The value of the property
-	 */
-	getProperty(propertyName: string): string | number | boolean | object | null;
-
-	/**
-	 * Sets the value of a property with the specified name.
-	 * @param propertyName The name of the property
-	 * @param propertyValue The value to set
-	 */
-	setProperty(
-		propertyName: string,
-		propertyValue: string | number | boolean | object | null,
-	): void;
-
-	/**
-	 * Gets all property names
-	 * @returns Array of property names
-	 */
-	getAllPropertyNames(): string[];
-
-	/**
-	 * Searches for AppGlobalStorage entities with extension properties that match the specified query.
-	 * @param extensionPropertiesQuery Key-value pairs representing properties and their values
-	 * @returns The set of AppGlobalStorage entities that contain the specified extension properties
-	 */
-	static findByExtensionProperties(
-		extensionPropertiesQuery: Record<string, unknown>,
-	): YTSet<AppGlobalStorage>;
-}
+export class AppGlobalStorage extends BaseEntity {}
